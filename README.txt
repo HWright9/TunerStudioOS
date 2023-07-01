@@ -1,6 +1,6 @@
 TunerStudio_OS_dev
 
-Tuner Studio Operating System Development Copyright (C) Henry Wright
+Arduino to Tuner Studio Operating System Development Copyright (C) Henry Wright
 Based on the works of GPIO STD V1.000.
 GPIO STD V1.000 is Copyright (C) Darren Siepka 
 Speeduino is Copyright (C) Josh Stewart
