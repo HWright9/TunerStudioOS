@@ -1,0 +1,31 @@
+TunerStudio_OS_dev
+
+----------------------------------------------------------------------------------------------------------
+Release v0.1
+01-July-2023
+Henry Wright.
+
+First Release! The operating system is working and I have provided a few examples of different ways of manipulating data.
+
+Functionality so far:
+1.	Define variables which are saved to and recalled from the internal memory (EEPROM) of the Arduino.
+2.	Send the variables in memory to TS and receive new data when variables in TS are changed.
+3.	Write (Burn) these variables to the EEPROM.
+4.	Send measurement variables at a defined rate to TS for display and logging.
+5.	Receive commands to execute certain functions on the Arduino. i.e. switch an output on or off.
+6.	Provide a task based timing system to execute tasks with feedback if those tasks have overrun.
+
+
+Known Bugs:
+ - Always get the warning about version number being unexpected. This is apparently normal since TS wants to only be used
+   with "approved devices. So we are sort of spoofing a speeduino. 
+ - TS sometimes disconnects while waiting for a burn and takes a few trys to actually burn large data.
+ - EEProm Clear function does not work, TS forces a re-connect and reboot, probably same problem as above.
+
+
+Development Direction:
+ - Working on supporting Arduino Uno (1kb EEPROM)
+ - Moving to structure based method of sending serial data. Should be much less tedious than updating FullStatus[XX]
+ - CAN bus standard functions and enable conditions.
+
+----------------------------------------------------------------------------------------------------------
