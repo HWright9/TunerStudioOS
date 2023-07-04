@@ -32,14 +32,20 @@ MCP_CAN CAN0(CAN0_CS);      // Set MCP_CAN CAN0 instance CS to pin 11
 struct config1 configPage1;
 struct config2 configPage2;
 struct config3 configPage3;
+#if defined(EEPROM_SIZE_8KB)
 struct config4 configPage4;
 struct config5 configPage5;
+#endif
 
 #if defined(ARDUINO_AVR_MEGA2560)
     HardwareSerial &AUX_SERIALLink = Serial3; // setup which serial port connects to the speeduino secondary serial
     HardwareSerial &TS_SERIALLink  = Serial;   // setup which serial port connects to TS
+
+#elif defined (ARDUINO_AVR_UNO)
+    HardwareSerial &AUX_SERIALLink = Serial; // setup which serial port connects to the speeduino secondary serial
+    HardwareSerial &TS_SERIALLink  = Serial;   // setup which serial port connects to TS
 #else
-    #error Incorrect board selected. Please select the correct board (Usually Mega 2560) and upload again  
+    #error Incorrect board selected. Currently AVR Mega2560 and UNO supported. Please select the correct board and upload again
 #endif 
 
 volatile uint16_t mainLoopCount;
@@ -290,7 +296,7 @@ void INIT_readOnlyVars(void)
   configPage3.page3ActualSize = sizeof(configPage3);
   configPage3.page3CRC = 0;
   STOR_writeConfig(3); // re-write the config in case any of the above changes. normally this does nothing because the EEPROM will skip all the variables that are the same.
-  
+#if defined(EEPROM_SIZE_8KB)
   configPage4.page4ActualSize = sizeof(configPage4);
   configPage4.page4CRC = 0;
   STOR_writeConfig(4); // re-write the config in case any of the above changes. normally this does nothing because the EEPROM will skip all the variables that are the same.
@@ -298,6 +304,7 @@ void INIT_readOnlyVars(void)
   configPage5.page5ActualSize = sizeof(configPage5);
   configPage5.page5CRC = 0;
   STOR_writeConfig(5); // re-write the config in case any of the above changes. normally this does nothing because the EEPROM will skip all the variables that are the same.
+#endif
 }
 
 /*

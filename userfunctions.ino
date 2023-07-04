@@ -38,11 +38,11 @@ void USER_InputOutput(void)
 {
   uint8_t i;
   
-  for (i = 0; i < 64; i++)
+  for (i = 0; i < BOARD_MAX_DIGITAL_PINS; i++)
   {
     readDigitalPort(i);
   }
-  for (i = 0; i < 16; i++)
+  for (i = 0; i < BOARD_MAX_ADC_PINS; i++)
   {
     readAnalog(i);
   }

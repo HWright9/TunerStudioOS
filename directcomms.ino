@@ -253,7 +253,7 @@ void direct_receiveValue(uint16_t rvOffset, uint8_t newValue)
         *((uint8_t *)pnt_configPage + (uint16_t)rvOffset) = newValue; //
       }
     break;
-      
+#if defined(EEPROM_SIZE_8KB)
     case 4:
       pnt_configPage = &configPage4; //Setup a pointer to the relevant config page
      //For some reason, TunerStudio is sending offsets greater than the maximum page size. I'm not sure if it's their bug or mine,
@@ -273,6 +273,7 @@ void direct_receiveValue(uint16_t rvOffset, uint8_t newValue)
         *((uint8_t *)pnt_configPage + (uint16_t)rvOffset) = newValue; //
       }
     break;
+#endif
   }
 }
 
@@ -317,7 +318,7 @@ void direct_sendPage(uint16_t send_page_offset, uint16_t send_page_Length, byte 
                   //send_page_Length = page_3_size; 
                 }
             break;
-            
+#if defined(EEPROM_SIZE_8KB)        
             case 4:
                 {
                 pnt_configPage = &configPage4; //Create a pointer to Page 4 in memory  
@@ -331,6 +332,7 @@ void direct_sendPage(uint16_t send_page_offset, uint16_t send_page_Length, byte 
                   //send_page_Length = page_5_size; 
                 }
             break;
+#endif
           }
     
           //All other bytes can simply be copied from the config table

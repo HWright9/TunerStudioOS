@@ -7,7 +7,13 @@
 /*--------------- canbus config options -------------- */
 /* CAN 0 */
 #define CAN0_INT        2         // Set INT to pin 2
-#define CAN0_CS         53        // Set CS to pin 11
+#if defined(ARDUINO_AVR_MEGA2560)
+  #define CAN0_CS         53        // Set CS to pin 11 on Mega
+#elif defined(ARDUINO_AVR_UNO)
+  #define CAN0_CS         10        // Set CS to pin 10 on UNO
+#else
+  #error Incorrect board selected. Currently AVR Mega2560 and UNO supported. Please select the correct board and upload again
+#endif 
 
 #define CAN_XTAL_8MHZ           0  // Different MCP2515 boards have different crystals.
 #define CAN_XTAL_16MHZ          1
