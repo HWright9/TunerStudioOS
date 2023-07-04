@@ -1,6 +1,25 @@
 TunerStudio_OS_dev
 
 ----------------------------------------------------------------------------------------------------------
+Release v0.2
+04-July-2023
+Henry Wright.
+
+Arduino UNO using the AVRATMEGA328P processor supported!
+
+Compiles with approx 1KB RAM remaining on the UNO. CANBUS also works. Loop speed the same as Mega.
+
+New Setting in .ini file to select correct flash size. Use 1Kb for UNO and 8KB for Mega. 
+
+Also sped up EEPROM clear and fixed a few minor EEPROM memory address bugs. 
+
+Fixed file names for compliing with Arduino IDE.
+
+Development Direction:
+ - Moving to structure based method of sending serial data. Should be much less tedious than updating FullStatus[XX]
+ - CAN bus standard functions and enable conditions.
+
+----------------------------------------------------------------------------------------------------------
 Release v0.1
 01-July-2023
 Henry Wright.

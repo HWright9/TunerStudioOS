@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <msq xmlns="http://www.msefi.com/:msq">
-<bibliography author="TunerStudio MS Ultra 3.1.08 - EFI Analytics, Inc." tuneComment="" writeDate="Sat Jul 01 16:01:05 AEST 2023"/>
-<versionInfo fileFormat="5.0" firmwareInfo="TS_OS_230525_dev" nPages="5" signature="speeduino_TS_OS_230525_dev"/>
+<bibliography author="TunerStudio MS Ultra 3.1.08 - EFI Analytics, Inc." tuneComment="" writeDate="Tue Jul 04 21:25:30 AEST 2023"/>
+<versionInfo fileFormat="5.0" firmwareInfo="TS_OS_V0.20_dev" nPages="5" signature="speeduino_TS_OS_V0.20_dev"/>
 <page>
 <pcVariable name="tsCanId">"0"</pcVariable>
 <pcVariable name="tsCanId">"CAN ID 4"</pcVariable>
@@ -12,7 +12,7 @@
 <page number="0" size="128">
 <constant digits="0" name="page1ActualSize">10.0</constant>
 <constant digits="0" name="page1CRC">0.0</constant>
-<constant digits="0" name="ochBlockSizeSent">66.0</constant>
+<constant digits="0" name="ochBlockSizeSent">67.0</constant>
 <constant name="can0enable">"Enable"</constant>
 <constant name="can0Baud">"CAN_1000KBPS"</constant>
 <constant name="can0XTalFreq">"MCP_8MHZ"</constant>
@@ -42,13 +42,13 @@
          0.0 
          0.0 
          0.0 
-         248.0 
-         46.0 
+         142.0 
+         41.0 
          2.0 
-         16.0 
+         0.0 
          53.0 
          1.0 
-         129.0 
+         131.0 
          19.0 
          0.0 
          0.0 
@@ -82,55 +82,55 @@
          0.0 
          0.0 
          0.0 
-         17.0 
-         99.0 
-         0.0 
-         0.0 
+         233.0 
+         98.0 
+         85.0 
+         23.0 
          1.0 
          0.0 
-         63.0 
+         215.0 
          1.0 
-         54.0 
+         135.0 
          1.0 
-         57.0 
+         167.0 
          1.0 
-         59.0 
+         162.0 
          1.0 
-         67.0 
+         161.0 
          1.0 
-         67.0 
+         155.0 
          1.0 
-         67.0 
+         147.0 
          1.0 
-         66.0 
+         133.0 
          1.0 
-         67.0 
+         115.0 
          1.0 
-         66.0 
+         112.0 
          1.0 
-         71.0 
+         112.0 
          1.0 
-         71.0 
+         111.0 
          1.0 
-         68.0 
+         107.0 
          1.0 
-         73.0 
+         107.0 
          1.0 
-         73.0 
+         106.0 
          1.0 
-         68.0 
+         108.0 
          1.0 
          6.0 
          0.0 
-         1.0 
          0.0 
-         54.0 
+         0.0 
+         135.0 
          1.0 
          81.0 
          0.0 
          0.0 
          0.0 
-         53.0 
+         51.0 
          2.0 
          0.0 
          0.0 
@@ -173,7 +173,7 @@
          0.0 
       </constant>
 <constant digits="0" name="exampleLookupValue">12.0</constant>
-<constant digits="0" name="Ke_i_TestValue">0.0</constant>
+<constant digits="0" name="Ke_i_TestValue">200.0</constant>
 <constant digits="2" name="Kf_i_TestFloat1">12.5</constant>
 <constant digits="2" name="Kf_i_TestFloat2">-12.0</constant>
 <constant cols="1" digits="0" name="UNALLOCATED_TOP_1" rows="341" units="RAW">
@@ -183,7 +183,7 @@
          0.0 
          0.0 
          0.0 
-         66.0 
+         67.0 
          93.0 
          2.0 
          113.0 
@@ -202,13 +202,13 @@
          0.0 
          0.0 
          0.0 
-         152.0 
-         62.0 
+         96.0 
+         48.0 
          2.0 
-         16.0 
+         0.0 
          53.0 
          1.0 
-         129.0 
+         131.0 
          19.0 
          0.0 
          0.0 
@@ -242,55 +242,55 @@
          0.0 
          0.0 
          0.0 
-         17.0 
-         99.0 
-         0.0 
-         0.0 
+         233.0 
+         98.0 
+         85.0 
+         23.0 
          2.0 
          0.0 
-         63.0 
+         215.0 
          1.0 
-         56.0 
+         135.0 
          1.0 
-         56.0 
+         167.0 
          1.0 
-         57.0 
+         162.0 
          1.0 
-         67.0 
+         161.0 
          1.0 
-         67.0 
+         155.0 
          1.0 
-         67.0 
+         147.0 
          1.0 
-         66.0 
+         133.0 
          1.0 
-         67.0 
+         115.0 
          1.0 
-         67.0 
+         112.0 
          1.0 
-         71.0 
+         112.0 
          1.0 
-         71.0 
+         111.0 
          1.0 
-         68.0 
+         105.0 
          1.0 
-         73.0 
+         108.0 
          1.0 
-         73.0 
+         105.0 
          1.0 
-         67.0 
+         107.0 
          1.0 
          6.0 
          0.0 
-         1.0 
          0.0 
-         56.0 
+         0.0 
+         134.0 
          1.0 
          81.0 
          0.0 
          0.0 
          0.0 
-         53.0 
+         51.0 
          2.0 
          0.0 
          0.0 
@@ -447,7 +447,7 @@
          0.0 
          0.0 
          0.0 
-         53.0 
+         51.0 
          2.0 
          0.0 
          0.0 
@@ -474,8 +474,8 @@
          1.0 
          0.0 
          0.0 
-         30.0 
-         30.0 
+         28.0 
+         28.0 
          70.0 
          114.0 
          4.0 
@@ -2058,6 +2058,7 @@
 </page>
 <settings Comment="These setting are only used if this msq is opened without a project.">
 <setting name="FAST_COMMS" value="FAST_COMMS"/>
+<setting name="EEPROM_SIZE_8KB" value="EEPROM_SIZE_8KB"/>
 </settings>
 <userComments Comment="These are user comments that can be related to a particular setting or dialog.">
 <userComment name="canbroadcast_sel0" value=""/>

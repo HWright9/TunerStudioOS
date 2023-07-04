@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <msq xmlns="http://www.msefi.com/:msq">
 <bibliography author="TunerStudio MS Ultra 3.1.08 - EFI Analytics, Inc." tuneComment="" writeDate="Tue Jul 04 21:25:30 AEST 2023"/>
-<versionInfo fileFormat="5.0" firmwareInfo="TS_OS_V0.10_dev" nPages="5" signature="speeduino_TS_OS_V0.10_dev"/>
+<versionInfo fileFormat="5.0" firmwareInfo="TS_OS_V0.20_dev" nPages="5" signature="speeduino_TS_OS_V0.20_dev"/>
 <page>
 <pcVariable name="tsCanId">"0"</pcVariable>
 <pcVariable name="tsCanId">"CAN ID 4"</pcVariable>
