@@ -27,7 +27,6 @@ volatile uint8_t TIMR_LoopDlyWarnBits = 0; // Bitfield of warnings that a task w
 void INIT_timers()
 {
 #if defined(CORE_AVR)
-  //#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(ARDUINO_AVR_ATmega324)
    //Configure Timer2 for our low-freq interrupt code.
    
   TCCR2A = 0; //disable timer 2 while we run setup
@@ -63,7 +62,7 @@ void INIT_timers()
 /* 1ms Timer ISR */
 
 //Executes every ~1ms.
-#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)|| defined (ARDUINO_AVR_PRO) || defined(ARDUINO_AVR_ATmega324) //AVR chips use the ISR for this
+#if defined(CORE_AVR) //AVR chips use the ISR for this
 //******************************************************************
 //  Timer2 Interrupt Service is invoked by hardware Timer 2 every 1 ms = 1000 Hz
 //  16Mhz / 128 / 125 = 1000 Hz

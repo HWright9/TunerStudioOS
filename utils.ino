@@ -57,7 +57,13 @@ For **analog pins**, it will translate them into the correct internal pin number
 uint8_t pinTranslate(uint8_t rawPin)
 {
   uint8_t outputPin = rawPin;
+#if defined (ARDUINO_AVR_MEGA2560)
   if(rawPin > BOARD_MAX_DIGITAL_PINS) { outputPin = A8 + (outputPin - BOARD_MAX_DIGITAL_PINS - 1); }
+#elif defined (ARDUINO_AVR_UNO)
+  //do nothing?
+#else
+    #error Incorrect board selected. Currently AVR Mega2560 and UNO supported. Please select the correct board and upload again
+#endif 
 
   return outputPin;
 }
@@ -75,15 +81,31 @@ uint8_t pinTranslateAnalog(uint8_t rawPin)
     case 3: outputPin = A3; break;
     case 4: outputPin = A4; break;
     case 5: outputPin = A5; break;
-    case 6: outputPin = A6; break;
-    case 7: outputPin = A7; break;
-    case 8: outputPin = A8; break;
-    case 9: outputPin = A9; break;
-    case 10: outputPin = A10; break;
-    case 11: outputPin = A11; break;
-    case 12: outputPin = A12; break;
-    case 13: outputPin = A13; break;
-  #if BOARD_MAX_ADC_PINS >= 14
+    #if BOARD_MAX_ADC_PINS >= 6
+      case 6: outputPin = A6; break;
+    #endif
+    #if BOARD_MAX_ADC_PINS >= 7
+      case 7: outputPin = A7; break;
+    #endif
+    #if BOARD_MAX_ADC_PINS >= 8
+      case 8: outputPin = A8; break;
+    #endif
+    #if BOARD_MAX_ADC_PINS >= 9
+      case 9: outputPin = A9; break;
+    #endif
+    #if BOARD_MAX_ADC_PINS >= 10
+      case 10: outputPin = A10; break;
+    #endif
+    #if BOARD_MAX_ADC_PINS >= 11
+      case 11: outputPin = A11; break;
+    #endif
+    #if BOARD_MAX_ADC_PINS >= 12
+      case 12: outputPin = A12; break;
+    #endif
+    #if BOARD_MAX_ADC_PINS >= 13
+      case 13: outputPin = A13; break;
+    #endif
+    #if BOARD_MAX_ADC_PINS >= 14
       case 14: outputPin = A14; break;
     #endif
     #if BOARD_MAX_ADC_PINS >= 15

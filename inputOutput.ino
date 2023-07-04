@@ -16,14 +16,16 @@
 
 void INIT_ADC()
 {
+    //Disconnect Digital Pins from ADC for less noise and power consumption
+    //DIDR0 = 0×01;
    //This sets the ADC (Analog to Digitial Converter) to run at 1Mhz, greatly reducing analog read times (MAP/TPS) when using the standard analogRead() function
     //1Mhz is the fastest speed permitted by the CPU without affecting accuracy
     //Please see chapter 11 of 'Practical Arduino' (http://books.google.com.au/books?id=HsTxON1L6D4C&printsec=frontcover#v=onepage&q&f=false) for more detail
-#if defined(ARDUINO_AVR_MEGA2560)
+#if defined(CORE_AVR)
      BIT_SET(ADCSRA,ADPS2);
      BIT_CLEAR(ADCSRA,ADPS1);
      BIT_CLEAR(ADCSRA,ADPS0); 
-     #endif
+#endif
 }
 
 /* Pin mapping */

@@ -10,17 +10,17 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
-#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega2561__)|| defined (ARDUINO_AVR_ATmega324)
-  #define LED_BUILTIN 13
+#if defined(ARDUINO_ARCH_AVR)
   #define CORE_AVR
   #define AVR_WDT
-
   
 #elif defined(CORE_TEENSY)
   #define BOARD_NR_GPIO_PINS 34
+  #define EEPROM_SIZE_8KB
   
 #elif defined(STM32_MCU_SERIES) || defined(_VARIANT_ARDUINO_STM32_)
   #define CORE_STM32
+  #define EEPROM_SIZE_8KB
 
 
   extern "C" char* sbrk(int incr); //Used by UTIL_freeRam
@@ -29,18 +29,27 @@
   #define portInputRegister(port) (volatile byte *)( &(port->regs->IDR) ) //These are defined in STM32F1/variants/generic_stm32f103c/variant.h but return a non byte* value
 
 #else
-  #error Incorrect board selected. Please select the correct board (Usually Mega 2560) and upload again
+  #error Incorrect board selected. Currently AVR Mega2560 and UNO supported. Please select the correct board and upload again
 #endif  
 
 // now set specific processor compile flags
-#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega2561__)
+#if defined(__AVR_ATmega1280__) || defined(ARDUINO_AVR_MEGA2560) || defined(__AVR_ATmega2561__)
+  #define EEPROM_SIZE_8KB
   #define MEGA_AVR
   #define BOARD_NR_GPIO_PINS 54
   #define BOARD_MAX_IO_PINS  58 //digital pins + analog channels + 1
   #define BOARD_MAX_DIGITAL_PINS 52
   #define BOARD_MAX_ADC_PINS 15
+  
+#elif defined(ARDUINO_AVR_UNO)
+  #define BOARD_NR_GPIO_PINS 19
+  #define BOARD_MAX_IO_PINS  20 //digital pins + analog channels + 1
+  #define BOARD_MAX_DIGITAL_PINS 13
+  #define BOARD_MAX_ADC_PINS 6
 
-#endif
+#else
+  #error Incorrect board selected. Currently AVR Mega2560 and UNO supported. Please select the correct board and upload again
+#endif 
 
 // global true/false statements
 #define LOW                                0
@@ -127,10 +136,12 @@ const unsigned char ECU_RevNum[]       = "TS_OS_V0.10_dev";      //this is what 
 
 const uint8_t  data_structure_version = 2; //This identifies the data structure when reading / writing.
 const uint8_t  page_1_size = 128;
-const uint16_t page_2_size = 704;
-const uint16_t page_3_size = 256;
-const uint16_t page_4_size = 336;
+const uint16_t page_2_size = 374;
+const uint16_t page_3_size = 512;
+#if defined(EEPROM_SIZE_8KB)
+const uint16_t page_4_size = 512;
 const uint16_t page_5_size = 512;
+#endif
 
 
 //The status struct contains the current values for all 'live' variables
@@ -243,6 +254,7 @@ struct __attribute__ ( ( packed ) ) config3
 //  } __attribute__((__packed__)); //The 32 bit systems require all structs to be fully packed
 //#endif
 
+#if defined(EEPROM_SIZE_8KB)
 //-------------------------------------------------------------------------------
 //Page 4 of the config - See the ini file for further reference
 struct __attribute__ ( ( packed ) ) config4 
@@ -271,7 +283,7 @@ struct __attribute__ ( ( packed ) ) config5
 //#else
 //  } __attribute__((__packed__)); //The 32 bit systems require all structs to be fully packed
 //#endif
-  
+#endif
  //declare io pins
 
 //Pins
@@ -284,8 +296,10 @@ extern struct statuses currentStatus;
 extern struct config1 configPage1;  
 extern struct config2 configPage2;
 extern struct config3 configPage3;
+#if defined(EEPROM_SIZE_8KB)
 extern struct config4 configPage4;
 extern struct config5 configPage5;
+#endif
 
 struct digitalPorts_t digitalPorts0_15;
 struct digitalPorts_t digitalPorts16_31;

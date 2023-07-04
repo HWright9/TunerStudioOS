@@ -38,6 +38,7 @@ void STOR_writeConfigNoBlock(void)
       EEPROM_PageStart = EEPROM_CONFIG3_START;
       EEPROM_PageEnd = EEPROM_CONFIG3_END;
     break;
+#if defined(EEPROM_SIZE_8KB)
     case 4:
       pnt_configPage = (uint8_t *)&configPage4; //Create a pointer to Page 4 in memory
       EEPROM_PageStart = EEPROM_CONFIG4_START;
@@ -48,6 +49,7 @@ void STOR_writeConfigNoBlock(void)
       EEPROM_PageStart = EEPROM_CONFIG5_START;
       EEPROM_PageEnd = EEPROM_CONFIG5_END;
     break;
+#endif
     default:
     break;
   }
@@ -140,7 +142,7 @@ void STOR_writeConfig(uint8_t thePage)
             // }
   
          break;
-
+#if defined(EEPROM_SIZE_8KB)
          case 4:
          /*---------------------------------------------------
          | Config page 4 (See storage.h for data layout)
@@ -172,6 +174,7 @@ void STOR_writeConfig(uint8_t thePage)
             // }
   
          break;
+#endif
        }     
 
   BIT_SET(currentStatus.systembits, BIT_SYSTEM_BURN_GOOD); //set burn_good flag
@@ -184,8 +187,10 @@ void STOR_loadConfig(void)
    EEPROM.get(EEPROM_CONFIG1_START, configPage1);
    EEPROM.get(EEPROM_CONFIG2_START, configPage2);
    EEPROM.get(EEPROM_CONFIG3_START, configPage3);
+#if defined(EEPROM_SIZE_8KB)
    EEPROM.get(EEPROM_CONFIG4_START, configPage4);
    EEPROM.get(EEPROM_CONFIG5_START, configPage5);
+#endif
    
    BIT_SET(currentStatus.systembits, BIT_SYSTEM_BURN_GOOD); //set burn_good flag since RAM = EEPROM
 }
@@ -196,6 +201,6 @@ void STOR_loadConfig(void)
 void STOR_eraseEEPROM(void)
 {
   for (int i = 0 ; i < EEPROM.length() ; i++) {
-  EEPROM.write(i, 0);
+  EEPROM.update(i, 0);
   }
 }
