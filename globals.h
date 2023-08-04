@@ -15,7 +15,6 @@
   #define AVR_WDT
   
 #elif defined(CORE_TEENSY)
-  #define BOARD_NR_GPIO_PINS 34
   #define EEPROM_SIZE_8KB
   
 #elif defined(STM32_MCU_SERIES) || defined(_VARIANT_ARDUINO_STM32_)
@@ -35,20 +34,24 @@
 // now set specific processor compile flags
 #if defined(__AVR_ATmega1280__) || defined(ARDUINO_AVR_MEGA2560) || defined(__AVR_ATmega2561__)
   #define EEPROM_SIZE_8KB
+  #define AUX_SERIAL_ENBL
   #define MEGA_AVR
-  #define BOARD_NR_GPIO_PINS 54
   #define BOARD_MAX_IO_PINS  58 //digital pins + analog channels + 1
   #define BOARD_MAX_DIGITAL_PINS 52
   #define BOARD_MAX_ADC_PINS 15
   
+#elif defined(ARDUINO_AVR_NANO)
+  #define BOARD_MAX_IO_PINS 20 //digital pins + analog channels + 1
+  #define BOARD_MAX_DIGITAL_PINS 13
+  #define BOARD_MAX_ADC_PINS 6
+  
 #elif defined(ARDUINO_AVR_UNO)
-  #define BOARD_NR_GPIO_PINS 19
   #define BOARD_MAX_IO_PINS  20 //digital pins + analog channels + 1
   #define BOARD_MAX_DIGITAL_PINS 13
   #define BOARD_MAX_ADC_PINS 6
 
 #else
-  #error Incorrect board selected. Currently AVR Mega2560 and UNO supported. Please select the correct board and upload again
+  #error Incorrect board selected. Currently AVR Mega2560, NANO and UNO supported. Please select the correct board and upload again
 #endif 
 
 // global true/false statements

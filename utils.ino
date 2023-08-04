@@ -59,10 +59,8 @@ uint8_t pinTranslate(uint8_t rawPin)
   uint8_t outputPin = rawPin;
 #if defined (ARDUINO_AVR_MEGA2560)
   if(rawPin > BOARD_MAX_DIGITAL_PINS) { outputPin = A8 + (outputPin - BOARD_MAX_DIGITAL_PINS - 1); }
-#elif defined (ARDUINO_AVR_UNO)
-  //do nothing?
 #else
-    #error Incorrect board selected. Currently AVR Mega2560 and UNO supported. Please select the correct board and upload again
+//do nothing?
 #endif 
 
   return outputPin;

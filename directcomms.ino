@@ -345,6 +345,7 @@ void direct_sendPage(uint16_t send_page_offset, uint16_t send_page_Length, byte 
 
           if (cmd == 206)   //came via passthrough from serial3
             {
+#if defined(AUX_SERIAL_ENBL)
               AUX_SERIALLink.print("r");
               AUX_SERIALLink.write(thistsCanId);                //canId of the device you are requesting data from
               AUX_SERIALLink.write(cmd);                       //  
@@ -352,7 +353,8 @@ void direct_sendPage(uint16_t send_page_offset, uint16_t send_page_Length, byte 
               AUX_SERIALLink.write(0x00);                       // dummy offset msb
               AUX_SERIALLink.write(lowByte(send_page_Length));  // length lsb
               AUX_SERIALLink.write(highByte(send_page_Length)); // length msb
-              AUX_SERIALLink.write((uint8_t *)&response, sizeof(response));          
+              AUX_SERIALLink.write((uint8_t *)&response, sizeof(response));
+#endif              
             }
           else
           {  
@@ -465,6 +467,7 @@ void direct_sendValues(uint16_t theOffset, uint16_t packetLength, uint8_t cmd)
     }
     else if (cmd == 180) // respond to 2nd serial link
     {
+#if defined(AUX_SERIAL_ENBL)
       //TS_SERIALLink.print("r was sent");
       AUX_SERIALLink.write("r");         //confirm cmd letter 
       AUX_SERIALLink.write(0x00);           //canid
@@ -473,6 +476,7 @@ void direct_sendValues(uint16_t theOffset, uint16_t packetLength, uint8_t cmd)
       AUX_SERIALLink.write(highByte(theOffset));                      //start theOffset msb
       AUX_SERIALLink.write(lowByte(packetLength));      //confirm no of byte to be sent
       AUX_SERIALLink.write(highByte(packetLength));      //confirm no of byte to be sent
+#endif
       
       for(uint16_t x=theOffset; x < (theOffset + packetLength); x++)
       {

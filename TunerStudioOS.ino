@@ -37,15 +37,10 @@ struct config4 configPage4;
 struct config5 configPage5;
 #endif
 
-#if defined(ARDUINO_AVR_MEGA2560)
-    HardwareSerial &AUX_SERIALLink = Serial3; // setup which serial port connects to the speeduino secondary serial
-    HardwareSerial &TS_SERIALLink  = Serial;   // setup which serial port connects to TS
+HardwareSerial &TS_SERIALLink  = Serial;   // setup which serial port connects to TS
 
-#elif defined (ARDUINO_AVR_UNO)
-    HardwareSerial &AUX_SERIALLink = Serial; // setup which serial port connects to the speeduino secondary serial
-    HardwareSerial &TS_SERIALLink  = Serial;   // setup which serial port connects to TS
-#else
-    #error Incorrect board selected. Currently AVR Mega2560 and UNO supported. Please select the correct board and upload again
+#if defined(AUX_SERIAL_ENBL)
+    HardwareSerial &AUX_SERIALLink = Serial3; // setup which serial port connects to the speeduino secondary serial
 #endif 
 
 volatile uint16_t mainLoopCount;
@@ -62,7 +57,9 @@ void setup() {
   INIT_readOnlyVars();
 
   TS_SERIALLink.begin(115200);
-  AUX_SERIALLink.begin(115200);  
+#if defined(AUX_SERIAL_ENBL)
+  AUX_SERIALLink.begin(115200);
+#endif  
   
   mainLoopCount = 0;
   currentStatus.secl = 0;
@@ -141,11 +138,12 @@ void loop()
   /* This is a do-while-nothing-else-happening task to avoid serial sending affecting other timed tasks */
   if (Le_Cnt_TimedTasksThisLoop == 0)
   {   
-    
+#if defined  (AUX_SERIAL_ENBL)     
     if (AUX_SERIALLink.available() > 0)      // if AUX_SERIALLink has data then do the remote serial command subroutine
     {
       //remote_serial_command();
     }
+#endif
 
     if (TS_SERIALLink.available() > 0)      // if TS_SERIALLink has data then do the direct serial command subroutine(Typical TS link)
     {
@@ -161,11 +159,13 @@ void loop()
     }
   }
   
-  /* these next two serial checks are untimed and designed to catch the serial buffer overflow if for some reason there isn't spare time in the main loop. */    
+  /* these next two serial checks are untimed and designed to catch the serial buffer overflow if for some reason there isn't spare time in the main loop. */ 
+#if defined  (AUX_SERIAL_ENBL) 
   if (AUX_SERIALLink.available() > 32) 
   {
     //remote_serial_command();   -Implementation TODO             
-  }     
+  }
+#endif     
         
   if (TS_SERIALLink.available() > 32) 
   {

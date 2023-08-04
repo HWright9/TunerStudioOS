@@ -76,7 +76,7 @@ return tempReading;
 uint8_t readDigitalPort(uint8_t Dpin)
 {
   uint8_t pinValue = 0;
-  if (Dpin < BOARD_NR_GPIO_PINS)
+  if (Dpin < BOARD_MAX_IO_PINS)
   {
     if (Dpin < 16)
     {
@@ -140,7 +140,7 @@ uint8_t readDigitalPort(uint8_t Dpin)
 * returns: 0 = write successful, 1 = failed */
 uint8_t setDigitalPort(uint8_t Dpin, uint8_t value, uint8_t setOverride)
 {
-  if (Dpin < BOARD_NR_GPIO_PINS)
+  if (Dpin < BOARD_MAX_IO_PINS)
   {
     if (Dpin < 16)
     {
@@ -228,7 +228,7 @@ uint8_t setDigitalPort(uint8_t Dpin, uint8_t value, uint8_t setOverride)
 * returns: 0 = set successful, 1 = failed */
 uint8_t setPortMode(uint8_t Dpin, uint8_t pinmode)
 {
-  if (Dpin < BOARD_NR_GPIO_PINS)
+  if (Dpin < BOARD_MAX_IO_PINS)
   {
     pinMode(Dpin, pinmode);
     if (Dpin < 16)
@@ -264,7 +264,7 @@ uint8_t setPortMode(uint8_t Dpin, uint8_t pinmode)
 * returns: 0 = set successful, 1 = failed */
 uint8_t setPortOverride(uint8_t Dpin, uint8_t isOverride)
 {
-  if (Dpin < BOARD_NR_GPIO_PINS)
+  if (Dpin < BOARD_MAX_IO_PINS)
   {
     if (Dpin < 16)
     {
