@@ -35,9 +35,9 @@ void CAN0_maintenance(void)
 {
   if (configPage1.can0Enable == true)
   {
-    if (bitRead(VS_serialData.Data.canstatus, BIT_CANSTATUS_CAN0ACTIVATED) == false) { INIT_can0(); }    //init can interface 0
+    if (bitRead(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0ACTIVATED) == false) { INIT_can0(); }    //init can interface 0
     
-    else if ((bitRead(VS_serialData.Data.canstatus, BIT_CANSTATUS_CAN0FAILED) == true)) // CAN bus failed to send many messages, Attempt re-init.
+    else if ((bitRead(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0FAILED) == true)) // CAN bus failed to send many messages, Attempt re-init.
     {
       byte canmsg[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
       Send_CAN0_message(0, 0x799, canmsg);
@@ -55,22 +55,22 @@ void INIT_can0(void)
     if(CANStat == CAN_OK)  
     {
        CAN0.setMode(MCP_NORMAL);
-       BIT_SET(VS_serialData.Data.canstatus, BIT_CANSTATUS_CAN0ACTIVATED);
+       BIT_SET(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0ACTIVATED);
        can0_Msg_FailCntr = 0;
-       BIT_CLEAR(VS_serialData.Data.canstatus, BIT_CANSTATUS_CAN0FAILED);
+       BIT_CLEAR(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0FAILED);
         //TS_SERIALLink.println("CAN BUS Shield init ok!");
     }
     else
     {
-      BIT_CLEAR(VS_serialData.Data.canstatus, BIT_CANSTATUS_CAN0ACTIVATED);
+      BIT_CLEAR(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0ACTIVATED);
       //TS_SERIALLink.println("CAN BUS Shield init fail");
       //TS_SERIALLink.println("Init CAN BUS Shield again");
     }
   }
   else
   { // User disabled CAN
-    BIT_CLEAR(VS_serialData.Data.canstatus, BIT_CANSTATUS_CAN0ACTIVATED);
-    BIT_CLEAR(VS_serialData.Data.canstatus, BIT_CANSTATUS_CAN0FAILED);
+    BIT_CLEAR(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0ACTIVATED);
+    BIT_CLEAR(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0FAILED);
     can0_Msg_FailCntr = 0;
   }
   
@@ -82,24 +82,24 @@ void Send_CAN0_message(byte bcChan, uint16_t theaddress, byte *thedata)
 {
 
   byte CANStat = CAN0.sendMsgBuf(theaddress, 0, 8, thedata);
-  VS_serialData.Data.dev1 = CANStat;    
+  Out_TS.Vars.dev1 = CANStat;    
   if(CANStat == CAN_OK)
   {
     //Serial.println("Message Sent Successfully!");
-   BIT_CLEAR(VS_serialData.Data.canstatus, BIT_CANSTATUS_CAN0MSGFAIL);
-   BIT_CLEAR(VS_serialData.Data.canstatus, BIT_CANSTATUS_CAN0FAILED);
+   BIT_CLEAR(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0MSGFAIL);
+   BIT_CLEAR(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0FAILED);
    can0_Msg_FailCntr = 0;
   } 
   else
   {
     //Serial.println("Error Sending Message...");
-    BIT_SET(VS_serialData.Data.canstatus, BIT_CANSTATUS_CAN0MSGFAIL);
+    BIT_SET(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0MSGFAIL);
     if (can0_Msg_FailCntr < 255) { can0_Msg_FailCntr++; }
   }  
 
   if (can0_Msg_FailCntr > 50)
   {
-    BIT_SET(VS_serialData.Data.canstatus, BIT_CANSTATUS_CAN0FAILED); // This stops any further tries at sending messages until re-init
+    BIT_SET(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0FAILED); // This stops any further tries at sending messages until re-init
   }
 }
 
@@ -138,8 +138,8 @@ void recieveCAN_Timeouts(void)
 void canBroadcast_5ms(void)
 {
   if ((configPage1.can0Enable == true) && 
-      (bitRead(VS_serialData.Data.canstatus, BIT_CANSTATUS_CAN0ACTIVATED) == true) &&
-      (bitRead(VS_serialData.Data.canstatus, BIT_CANSTATUS_CAN0FAILED) == false))
+      (bitRead(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0ACTIVATED) == true) &&
+      (bitRead(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0FAILED) == false))
   {
     byte canmsg[] = { 0, 0, 0, 0, 0, 0, 0, 5 };
     Send_CAN0_message(0, 0x500, canmsg);
@@ -149,8 +149,8 @@ void canBroadcast_5ms(void)
 void canBroadcast_20ms(void)
 {
   if ((configPage1.can0Enable == true) && 
-      (bitRead(VS_serialData.Data.canstatus, BIT_CANSTATUS_CAN0ACTIVATED) == true) &&
-      (bitRead(VS_serialData.Data.canstatus, BIT_CANSTATUS_CAN0FAILED) == false))
+      (bitRead(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0ACTIVATED) == true) &&
+      (bitRead(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0FAILED) == false))
   {
   byte canmsg[] = { 0, 0, 0, 0, 0, 0, 0, 20 };
   Send_CAN0_message(0, 0x501, canmsg);
@@ -160,8 +160,8 @@ void canBroadcast_20ms(void)
 void canBroadcast_50ms(void)
 {
   if ((configPage1.can0Enable == true) && 
-      (bitRead(VS_serialData.Data.canstatus, BIT_CANSTATUS_CAN0ACTIVATED) == true) &&
-      (bitRead(VS_serialData.Data.canstatus, BIT_CANSTATUS_CAN0FAILED) == false))
+      (bitRead(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0ACTIVATED) == true) &&
+      (bitRead(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0FAILED) == false))
   {
   byte canmsg[] = { 0, 0, 0, 0, 0, 0, 0, 50 };
   Send_CAN0_message(0, 0x502, canmsg);
@@ -171,8 +171,8 @@ void canBroadcast_50ms(void)
 void canBroadcast_100ms(void)
 {
   if ((configPage1.can0Enable == true) && 
-      (bitRead(VS_serialData.Data.canstatus, BIT_CANSTATUS_CAN0ACTIVATED) == true) &&
-      (bitRead(VS_serialData.Data.canstatus, BIT_CANSTATUS_CAN0FAILED) == false))
+      (bitRead(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0ACTIVATED) == true) &&
+      (bitRead(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0FAILED) == false))
   {
   byte canmsg[] = { 0, 0, 0, 0, 0, 0, 0, 100 };
   Send_CAN0_message(0, 0x503, canmsg);
@@ -182,8 +182,8 @@ void canBroadcast_100ms(void)
 void canBroadcast_500ms(void)
 {
   if ((configPage1.can0Enable == true) && 
-      (bitRead(VS_serialData.Data.canstatus, BIT_CANSTATUS_CAN0ACTIVATED) == true) &&
-      (bitRead(VS_serialData.Data.canstatus, BIT_CANSTATUS_CAN0FAILED) == false))
+      (bitRead(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0ACTIVATED) == true) &&
+      (bitRead(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0FAILED) == false))
   {
   byte canmsg[] = { 0, 0, 0, 0, 0, 0, 5, 000 };
   Send_CAN0_message(0, 0x504, canmsg);
@@ -193,8 +193,8 @@ void canBroadcast_500ms(void)
 void canBroadcast_1000ms(void)
 {
   if ((configPage1.can0Enable == true) && 
-      (bitRead(VS_serialData.Data.canstatus, BIT_CANSTATUS_CAN0ACTIVATED) == true) &&
-      (bitRead(VS_serialData.Data.canstatus, BIT_CANSTATUS_CAN0FAILED) == false))
+      (bitRead(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0ACTIVATED) == true) &&
+      (bitRead(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0FAILED) == false))
   {
   byte canmsg[] = { 0, 0, 0, 0, 0, 0, 7, 000 };
   Send_CAN0_message(0, 0x505, canmsg);
@@ -209,7 +209,7 @@ void canRx_MotecPLM_O2 (uint8_t *len, uint8_t rxBuf[])
   if ((&len == 8)) // Check msg on correct address and data length is correct
   {
     canRx_MotecPLM_O2_tmr = 0; //reset timeout
-    BIT_CLEAR(VS_serialData.Data.canRXmsg_dflt, CANRX_MOTECPLM_DFLT); // reset default flag
+    BIT_CLEAR(Out_TS.Vars.canRXmsg_dflt, CANRX_MOTECPLM_DFLT); // reset default flag
     
     //byte0 Compound ID, not used
     
@@ -219,12 +219,12 @@ void canRx_MotecPLM_O2 (uint8_t *len, uint8_t rxBuf[])
       //byte1 and 2 Calibrated Sensor Output Value Hi:lo*1 = x.xxxLa
       uint32_t result = (rxBuf[1] << 8) | rxBuf[2]; //(highByte << 8) | lowByte - this is EQR from PLM
       
-      VS_serialData.Data.Ve_Eqr_Sensor1 = ((float)result)/1000.0;
+      Out_TS.Vars.Ve_Eqr_Sensor1 = ((float)result)/1000.0;
       
     }
     else
     {
-      VS_serialData.Data.Ve_Eqr_Sensor1 = 0.0;
+      Out_TS.Vars.Ve_Eqr_Sensor1 = 0.0;
     }
 
       
@@ -279,8 +279,8 @@ void canRx_MotecPLM_O2 (uint8_t *len, uint8_t rxBuf[])
 // Default action when message times out
 void canRx_MotecPLM_O2_Dflt(void)
 {
-  BIT_SET(VS_serialData.Data.canRXmsg_dflt, CANRX_MOTECPLM_DFLT);
-  VS_serialData.Data.Ve_Eqr_Sensor1 = 0.0;
+  BIT_SET(Out_TS.Vars.canRXmsg_dflt, CANRX_MOTECPLM_DFLT);
+  Out_TS.Vars.Ve_Eqr_Sensor1 = 0.0;
 }
 
 /* End CAN RX Messages */

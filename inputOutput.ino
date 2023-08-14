@@ -64,7 +64,7 @@ uint16_t readAnalog(uint8_t AinCH)
     #if defined(MCU_STM32F103C8)
     tempReading >>= 2;  //rescales to max 1024 value else would be 0-4096
     #endif
-    VS_serialData.Data.Analog[AinCH] = tempReading;
+    Out_TS.Vars.Analog[AinCH] = tempReading;
   }
     
 return tempReading;
@@ -128,6 +128,13 @@ uint8_t readDigitalPort(uint8_t Dpin)
     }
   }
   //else pinValue is not configured as an output (out of pin range)
+  
+  //Align output data to TS
+  Out_TS.Vars.digitalPorts0_15_out = digitalPorts0_15.value;
+  Out_TS.Vars.digitalPorts16_31_out = digitalPorts16_31.value;
+  Out_TS.Vars.digitalPorts32_47_out = digitalPorts32_47.value;
+  Out_TS.Vars.digitalPorts48_63_out = digitalPorts48_63.value;
+  
   return pinValue;
 }
 

@@ -150,6 +150,7 @@ const uint16_t page_4_size = 512;
 const uint16_t page_5_size = 512;
 #endif
 
+uint8_t currentPage = 0; // TS controlled page for reading and writing EEPROM.
 
 //The status struct contains the current values for all 'live' variables
 /* struct statuses {
@@ -174,19 +175,21 @@ const uint16_t page_5_size = 512;
 };
 struct statuses currentStatus; //The global status object */
 
-//The global serial transmit status object, the order of variables here must match what tuner studio is going to recieve
-typedef struct status_t
+//The global serial transmit status object, the order of variables here must match exactly what tuner studio is going to recieve.
+typedef struct Out_TS_t
 {
-  byte secl; //Continous
-  byte systembits ;
-  byte LoopDlyWarnBits;
-  byte canstatus;    //canstatus bitfield
+  uint8_t secl; // counter of seconds 0-255 looping, required for TS comms.
+  uint8_t systembits; //system status bits
+  uint8_t LoopDlyWarnBits; //indicator that a l
+  uint8_t canstatus;    //canstatus bitfield
   uint16_t canRXmsg_dflt; //check if CAN RX messages are defaulted due to RX timeout
-  unsigned int loopsPerSecond ;
-  uint16_t UTIL_freeRam ;
-  uint8_t currentPage;
+  unsigned int loopsPerSecond;
+  uint16_t UTIL_freeRam;
   uint8_t testIO_hardware;//testIO_hardware
-  uint8_t remote_output_status[32];    //remote output condition status bitfield
+  uint16_t digitalPorts0_15_out;
+  uint16_t digitalPorts16_31_out;
+  uint16_t digitalPorts32_47_out;
+  uint16_t digitalPorts48_63_out;
   uint16_t Analog[16];    // 16bit analog value data array for local analog(0-15)
   
   uint16_t dev1;          //developer use only
@@ -200,12 +203,12 @@ typedef struct status_t
 };
 
 // this union of structures is to make it easier to transmit multiple data types via serial
-typedef union statuses_Pac_t
+typedef union Out_TS_Pac_t
 {
-  status_t Data;
-  byte serialPacket[sizeof(status_t)];
+  Out_TS_t Vars;
+  byte byteData[sizeof(Out_TS_t)];
 }; 
-statuses_Pac_t VS_serialData;
+Out_TS_Pac_t Out_TS;
 
 
 typedef struct digitalPorts_t

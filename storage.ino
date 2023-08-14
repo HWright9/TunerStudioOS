@@ -21,7 +21,7 @@ void STOR_writeConfigNoBlock(void)
   uint16_t EEPROM_PageStart, EEPROM_PageEnd;
   byte* pnt_configPage;
   
-  switch (VS_serialData.Data.currentPage)
+  switch (currentPage)
   {
     case 1:
       pnt_configPage = (uint8_t *)&configPage1; //Create a pointer to Page 1 in memory
@@ -69,7 +69,7 @@ void STOR_writeConfigNoBlock(void)
   
   if (EEPROM_PageStart + EEPROM_Addr >= EEPROM_PageEnd) 
   {
-    BIT_SET(VS_serialData.Data.systembits, BIT_SYSTEM_BURN_GOOD); //set burn_good flag
+    BIT_SET(Out_TS.Vars.systembits, BIT_SYSTEM_BURN_GOOD); //set burn_good flag
     EEPROM_Addr = 0;
   }    
 }
@@ -177,7 +177,7 @@ void STOR_writeConfig(uint8_t thePage)
 #endif
        }     
 
-  BIT_SET(VS_serialData.Data.systembits, BIT_SYSTEM_BURN_GOOD); //set burn_good flag
+  BIT_SET(Out_TS.Vars.systembits, BIT_SYSTEM_BURN_GOOD); //set burn_good flag
 }
 
 //---------------------------------------------------------------------------------------------------------------------------------------
@@ -192,7 +192,7 @@ void STOR_loadConfig(void)
    EEPROM.get(EEPROM_CONFIG5_START, configPage5);
 #endif
    
-   BIT_SET(VS_serialData.Data.systembits, BIT_SYSTEM_BURN_GOOD); //set burn_good flag since RAM = EEPROM
+   BIT_SET(Out_TS.Vars.systembits, BIT_SYSTEM_BURN_GOOD); //set burn_good flag since RAM = EEPROM
 }
 
 //---------------------------------------------------------------------------------------------------

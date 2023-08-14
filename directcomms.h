@@ -1,7 +1,7 @@
 #ifndef DIRECTCOMMS_H
 #define DIRECTCOMMS_H
 
-#define FULLSTATUS_SIZE 67 // Size of full status array in bytes
+//#define FULLSTATUS_SIZE 67 // Size of full status array in bytes
 
 /*Variables Shared between Functions should have [XXXX_] naming convention where XXXX is the source module identifier*/
 extern uint16_t COMS_readsPerSecCount; 
