@@ -28,12 +28,19 @@ void Send_CAN0_message(byte bcChan, uint16_t theaddress, byte *thedata);
 void receive_CAN0_message(void);
 void obd_command(byte usecan);
 uint16_t obd_response(byte therequestedPID, uint16_t therequestedCANID);
+
+
 void canBroadcast_5ms(void);
 void canBroadcast_20ms(void);
 void canBroadcast_50ms(void);
 void canBroadcast_100ms(void);
 void canBroadcast_500ms(void);
 void canBroadcast_1000ms(void);
+
+
+void recieveCAN_Timeouts(void);
+void canRx_MotecPLM_O2 (uint8_t *len, uint8_t rxBuf);
+void canRx_MotecPLM_O2_Dflt(void);
 
 
 #endif

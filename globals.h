@@ -129,6 +129,10 @@
 #define BIT_TIMER_20MS          6
 #define BIT_TIMER_5MS           7
 
+//Can RX message status
+#define CANRX_MOTECPLM_DFLT    0 // bit 0 is motec PLM.
+#define CANRX_UNDEFINEDMSG_DFLT      1 // next message and so on...
+
 /* Global Variables Outside status */
 uint8_t tsCanId = 0;          // this is the tunerstudio canID for the device you are requesting data from , this is 0 for the main ecu in the system which is usually the speeduino ecu . 
                               // this value is set in Tunerstudio when configuring your Speeduino
@@ -148,7 +152,7 @@ const uint16_t page_5_size = 512;
 
 
 //The status struct contains the current values for all 'live' variables
-struct statuses {
+/* struct statuses {
   volatile byte secl; //Continous
   volatile byte systembits ;
   volatile byte canstatus;    //canstatus bitfield
@@ -164,15 +168,38 @@ struct statuses {
   volatile uint16_t dev3;          //developer use only
   volatile uint16_t dev4;          //developer use only
   volatile uint16_t readsPerSecond; // how many datalog reads in the last sec
+  
+  volatile uint16_t canRXmsg_dflt; // bitfield of the default status of the first 16 can RX message objects.
+  
 };
-struct statuses currentStatus; //The global status object
+struct statuses currentStatus; //The global status object */
 
+//The global serial transmit status object, the order of variables here must match what tuner studio is going to recieve
 typedef struct status_t
 {
+  byte secl; //Continous
+  byte systembits ;
+  byte LoopDlyWarnBits;
+  byte canstatus;    //canstatus bitfield
+  uint16_t canRXmsg_dflt; //check if CAN RX messages are defaulted due to RX timeout
+  unsigned int loopsPerSecond ;
+  uint16_t UTIL_freeRam ;
+  uint8_t currentPage;
+  uint8_t testIO_hardware;//testIO_hardware
+  uint8_t remote_output_status[32];    //remote output condition status bitfield
+  uint16_t Analog[16];    // 16bit analog value data array for local analog(0-15)
+  
+  uint16_t dev1;          //developer use only
+  uint16_t dev2;          //developer use only
+  uint16_t dev3;          //developer use only
+  uint16_t dev4;          //developer use only
   float Vf_i_TestFloatOut;
   uint8_t Ve_i_TestByte1;
+  uint16_t readsPerSecond; // how many datalog reads in the last sec
+  float Ve_Eqr_Sensor1;
 };
 
+// this union of structures is to make it easier to transmit multiple data types via serial
 typedef union statuses_Pac_t
 {
   status_t Data;
@@ -210,6 +237,8 @@ struct __attribute__ ( ( packed ) ) config1
   uint8_t allowHWTestMode: 1;  // EEPROM based lockout of the hardware test mode. Prevents inadvertent serial data from accidently enabling this mode.
   uint8_t allowEEPROMClear: 1;  // EEPROM based lockout of the EEPROM wipe function. Prevents inadvertent serial data from accidently enabling this mode.
   uint8_t unused1_9_bits: 1;
+  
+  uint16_t canRXmsg_MotecPLM; // can Address for motec PLM message.
 
 
 //#if defined(CORE_AVR)

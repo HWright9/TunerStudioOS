@@ -146,15 +146,17 @@ void oneMSInterval() //Most ARM chips can simply call a function
   
     //**************************************************************************************************************************************************
     //This records the number of main loops the system has completed in the last second
-    currentStatus.loopsPerSecond = mainLoopCount;
+    VS_serialData.Data.loopsPerSecond = mainLoopCount;
     mainLoopCount = 0;
     //**************************************************************************************************************************************************
     //increament secl (secl is simply a counter that increments every second and is used to track whether the system has unexpectedly reset
-    currentStatus.secl++;
+    VS_serialData.Data.secl++;
     //**************************************************************************************************************************************************
   }
   if (loop1ms > 998) { loop1ms = 0; } //Reset counter for next loop. Note 0-999ms = 1sec. 
   else { loop1ms++; }
+  
+  VS_serialData.Data.LoopDlyWarnBits = TIMR_LoopDlyWarnBits; //copy to current status
   
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)|| defined (ARDUINO_AVR_PRO) || defined(ARDUINO_AVR_ATmega324)  //AVR chips use the ISR for this
     //Reset Timer2 to trigger in another ~1ms

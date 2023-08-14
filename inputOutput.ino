@@ -64,7 +64,7 @@ uint16_t readAnalog(uint8_t AinCH)
     #if defined(MCU_STM32F103C8)
     tempReading >>= 2;  //rescales to max 1024 value else would be 0-4096
     #endif
-    currentStatus.Analog[AinCH] = tempReading;
+    VS_serialData.Data.Analog[AinCH] = tempReading;
   }
     
 return tempReading;

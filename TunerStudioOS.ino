@@ -49,7 +49,7 @@ uint8_t Ve_t_WarningTimeoutTmr_100ms; // timer with 100ms resolution for warning
 
 void setup() {
   
-  currentStatus.systembits = 0; // clear all system bits.
+  VS_serialData.Data.systembits = 0; // clear all system bits.
   STOR_loadConfig();            
   INIT_setPinMapping();
   INIT_ADC();
@@ -62,8 +62,8 @@ void setup() {
 #endif  
   
   mainLoopCount = 0;
-  currentStatus.secl = 0;
-  BIT_SET(currentStatus.systembits, BIT_SYSTEM_READY); //set system ready flag
+  VS_serialData.Data.secl = 0;
+  BIT_SET(VS_serialData.Data.systembits, BIT_SYSTEM_READY); //set system ready flag
   
   INIT_timers(); //init timers at the end so that ECU timing is good.
 }
@@ -150,7 +150,7 @@ void loop()
       direct_serial_command();
     }
 
-    if (bitRead(currentStatus.canstatus, BIT_CANSTATUS_CAN0ACTIVATED) == true)
+    if (bitRead(VS_serialData.Data.canstatus, BIT_CANSTATUS_CAN0ACTIVATED) == true)
     {
       if(digitalRead(Pin_can0RXInt) == LOW )   // If CAN0_INT pin is low, read receive buffer
       {
@@ -173,7 +173,7 @@ void loop()
   }
   
   /* Check if we need to write the EEPROM */
-  if (bitRead(currentStatus.systembits, BIT_SYSTEM_BURN_GOOD) == false)
+  if (bitRead(VS_serialData.Data.systembits, BIT_SYSTEM_BURN_GOOD) == false)
     {
       STOR_writeConfigNoBlock();
     }
@@ -229,11 +229,13 @@ void FUNC_100msTask(void)
 {  
   canBroadcast_100ms();
   
+  recieveCAN_Timeouts();
+  
   SYS_setWarningBit();
   
   VS_serialData.Data.Vf_i_TestFloatOut = configPage2.Kf_i_TestFloat1 + configPage2.Kf_i_TestFloat2;
   
-  currentStatus.dev4 = u8_table2DLookup_u8(configPage2.exampleTable_Xaxis, configPage2.exampleTable_Ydata, sizeof(configPage2.exampleTable_Xaxis), configPage2.exampleLookupValue);
+  VS_serialData.Data.dev4 = u8_table2DLookup_u8(configPage2.exampleTable_Xaxis, configPage2.exampleTable_Ydata, sizeof(configPage2.exampleTable_Xaxis), configPage2.exampleLookupValue);
 
   USER_InputOutput();
     
@@ -268,7 +270,7 @@ void FUNC_1000msTask(void)
   CAN0_maintenance();
   canBroadcast_1000ms();
   
-  currentStatus.readsPerSecond = COMS_readsPerSecCount;
+  VS_serialData.Data.readsPerSecond = COMS_readsPerSecCount;
   COMS_readsPerSecCount = 0;
 
 } //END 1000ms Task
@@ -283,8 +285,10 @@ void FUNC_1000msTask(void)
 void INIT_readOnlyVars(void)
 {
   
+  //This sends the ochBlockSize variable that is used in TunerStudio to know how long the serial data stream is going to be.
+  configPage1.ochBlockSizeSent = sizeof(status_t);
+  
   //These run once to calculate the page sizes.
-  configPage1.ochBlockSizeSent = FULLSTATUS_SIZE;
   configPage1.page1ActualSize = sizeof(configPage1);
   configPage1.page1CRC = 0;
   STOR_writeConfig(1); // re-write the config in case any of the above changes. normally this does nothing because the EEPROM will skip all the variables that are the same.
@@ -316,13 +320,13 @@ void INIT_readOnlyVars(void)
 void SYS_setWarningBit(void)
 {
   //The following can be used to show the amount of free memory
-  currentStatus.UTIL_freeRam = UTIL_freeRam();
+  VS_serialData.Data.UTIL_freeRam = UTIL_freeRam();
   
   if ((TIMR_LoopDlyWarnBits > 0) || // any of the loop timer overflow warnings are set
-      (currentStatus.UTIL_freeRam < 500) || // running out of RAM
-      (currentStatus.loopsPerSecond < 200)) // slow loops
+      (VS_serialData.Data.UTIL_freeRam < 500) || // running out of RAM
+      (VS_serialData.Data.loopsPerSecond < 200)) // slow loops
   {
-    BIT_SET(currentStatus.systembits, BIT_SYSTEM_WARNING); //set system warning flag
+    BIT_SET(VS_serialData.Data.systembits, BIT_SYSTEM_WARNING); //set system warning flag
     Ve_t_WarningTimeoutTmr_100ms = 0; 
   }
   else if (Ve_t_WarningTimeoutTmr_100ms < 20) // 20 is 20*100ms = 2sec
@@ -331,7 +335,7 @@ void SYS_setWarningBit(void)
   } 
   else 
   { 
-    BIT_CLEAR(currentStatus.systembits, BIT_SYSTEM_WARNING); //clear system warning flag after timer expired
+    BIT_CLEAR(VS_serialData.Data.systembits, BIT_SYSTEM_WARNING); //clear system warning flag after timer expired
   }
 }
 

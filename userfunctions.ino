@@ -46,8 +46,8 @@ void USER_InputOutput(void)
   {
     readAnalog(i);
   }
-  if (configPage1.analogSelectorEn == APIN_ENABLED) { currentStatus.dev3 = readAnalog(Pin_analogSelector); }
+  if (configPage1.analogSelectorEn == APIN_ENABLED) { VS_serialData.Data.dev3 = readAnalog(Pin_analogSelector); }
   
-  VS_serialData.Data.Ve_i_TestByte1 = lowPassFilter_u16(currentStatus.Analog[0]/4, (uint8_t)configPage2.Ke_i_TestValue, VS_serialData.Data.Ve_i_TestByte1);
+  VS_serialData.Data.Ve_i_TestByte1 = lowPassFilter_u16(VS_serialData.Data.Analog[0]/4, (uint8_t)configPage2.Ke_i_TestValue, VS_serialData.Data.Ve_i_TestByte1);
   
 }
