@@ -117,9 +117,11 @@ void receive_CAN0_message()
     else  
       {
        // id is std 11 bit
+       Out_TS.Vars.dev3 = rxId;
+       Out_TS.Vars.dev2 = configPage1.canRXmsg_MotecPLM;
        if (rxId == configPage1.canRXmsg_MotecPLM)
        {
-         canRx_MotecPLM_O2(&len, rxBuf);
+         canRx_MotecPLM_O2(len, rxBuf);
        }
       }
 }
@@ -127,10 +129,15 @@ void receive_CAN0_message()
 //Handles timeouts for CAN messages not recieved, Called every 100ms.
 void recieveCAN_Timeouts(void)
 {
-  if (configPage1.canRXmsg_MotecPLM != 0x000) // Enabled Message
+  if (configPage1.canRXmsg_MotecPLM > 0x00) // Enabled Message
   {
     if(canRx_MotecPLM_O2_tmr < 255) { canRx_MotecPLM_O2_tmr++; }
     if(canRx_MotecPLM_O2_tmr > 10) { canRx_MotecPLM_O2_Dflt(); }
+  }
+  else
+  {
+    canRx_MotecPLM_O2_tmr = 0;
+    BIT_CLEAR(Out_TS.Vars.canRXmsg_dflt, CANRX_MOTECPLM_DFLT); // reset default flag    
   }
   
   // Check for any faults to set flag
@@ -208,9 +215,9 @@ void canBroadcast_1000ms(void)
 /* CAN RX Messages Below here */
 
 /* Recieve MotecPLM Can message frame on defined CAN ID */
-void canRx_MotecPLM_O2 (uint8_t *len, uint8_t rxBuf[])
+void canRx_MotecPLM_O2 (uint8_t len, uint8_t rxBuf[])
 {
-  if ((&len == 8)) // Check msg on correct address and data length is correct
+  if ((len == 8)) // Check msg on correct address and data length is correct
   {
     canRx_MotecPLM_O2_tmr = 0; //reset timeout
     BIT_CLEAR(Out_TS.Vars.canRXmsg_dflt, CANRX_MOTECPLM_DFLT); // reset default flag

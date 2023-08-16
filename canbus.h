@@ -39,7 +39,7 @@ void canBroadcast_1000ms(void);
 
 
 void recieveCAN_Timeouts(void);
-void canRx_MotecPLM_O2 (uint8_t *len, uint8_t rxBuf);
+void canRx_MotecPLM_O2 (uint8_t len, uint8_t rxBuf);
 void canRx_MotecPLM_O2_Dflt(void);
 
 
