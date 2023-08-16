@@ -132,6 +132,10 @@ void recieveCAN_Timeouts(void)
     if(canRx_MotecPLM_O2_tmr < 255) { canRx_MotecPLM_O2_tmr++; }
     if(canRx_MotecPLM_O2_tmr > 10) { canRx_MotecPLM_O2_Dflt(); }
   }
+  
+  // Check for any faults to set flag
+  if (Out_TS.Vars.canRXmsg_dflt > 0x00) { BIT_SET(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0RXMSGERR); }
+  else { BIT_CLEAR(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0RXMSGERR); }
 }
   
 

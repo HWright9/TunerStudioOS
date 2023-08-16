@@ -43,9 +43,8 @@ HardwareSerial &TS_SERIALLink  = Serial;   // setup which serial port connects t
     HardwareSerial &AUX_SERIALLink = Serial3; // setup which serial port connects to the speeduino secondary serial
 #endif 
 
-volatile uint16_t mainLoopCount;
 uint8_t Ve_t_WarningTimeoutTmr_100ms; // timer with 100ms resolution for warning light timeout.
-
+volatile uint16_t mainLoopCount;
 
 void setup() {
   

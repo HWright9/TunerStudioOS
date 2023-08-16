@@ -152,30 +152,12 @@ const uint16_t page_5_size = 512;
 
 uint8_t currentPage = 0; // TS controlled page for reading and writing EEPROM.
 
-//The status struct contains the current values for all 'live' variables
-/* struct statuses {
-  volatile byte secl; //Continous
-  volatile byte systembits ;
-  volatile byte canstatus;    //canstatus bitfield
-  volatile uint8_t remote_output_status[32];    //remote output condition status bitfield
-  volatile unsigned int loopsPerSecond ;
-  volatile  uint16_t UTIL_freeRam ;
-  volatile uint8_t currentPage;
-  volatile uint8_t testIO_hardware;//testIO_hardware
-  volatile uint16_t Analog[16];    // 16bit analog value data array for local analog(0-15)
-  
-  volatile uint16_t dev1;          //developer use only
-  volatile uint16_t dev2;          //developer use only
-  volatile uint16_t dev3;          //developer use only
-  volatile uint16_t dev4;          //developer use only
-  volatile uint16_t readsPerSecond; // how many datalog reads in the last sec
-  
-  volatile uint16_t canRXmsg_dflt; // bitfield of the default status of the first 16 can RX message objects.
-  
-};
-struct statuses currentStatus; //The global status object */
-
-//The global serial transmit status object, the order of variables here must match exactly what tuner studio is going to recieve.
+/* The global serial transmit status object.
+* All variables in this list will be transmitted to Tuner Studio in the order presented here.
+* Its critical that the order of variables here must match exactly what tuner studio .ini file is set up to recieve in the [OutputChannels] section.
+* The total size of this variable is captured in ochBlockSizeSent which can be read in Tuner Studio on page 1.
+* Its highly reccomended to keep the variable names the same between the .ini file and this code.
+*/
 typedef struct Out_TS_t
 {
   uint8_t secl; // counter of seconds 0-255 looping, required for TS comms.
@@ -183,7 +165,8 @@ typedef struct Out_TS_t
   uint8_t LoopDlyWarnBits; //indicator that a l
   uint8_t canstatus;    //canstatus bitfield
   uint16_t canRXmsg_dflt; //check if CAN RX messages are defaulted due to RX timeout
-  unsigned int loopsPerSecond;
+  uint16_t loopsPerSecond;
+  uint16_t readsPerSecond; // how many datalog reads in the last sec
   uint16_t UTIL_freeRam;
   uint8_t testIO_hardware;//testIO_hardware
   uint16_t digitalPorts0_15_out;
@@ -198,7 +181,6 @@ typedef struct Out_TS_t
   uint16_t dev4;          //developer use only
   float Vf_i_TestFloatOut;
   uint8_t Ve_i_TestByte1;
-  uint16_t readsPerSecond; // how many datalog reads in the last sec
   float Ve_Eqr_Sensor1;
 };
 

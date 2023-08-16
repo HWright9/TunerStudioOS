@@ -42,7 +42,7 @@ void USER_InputOutput(void)
   {
     readDigitalPort(i);
   }
-  for (i = 0; i < BOARD_MAX_ADC_PINS; i++)
+  for (i = 0; i <= BOARD_MAX_ADC_PINS; i++)
   {
     readAnalog(i);
   }
