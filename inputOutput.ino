@@ -44,7 +44,7 @@ void INIT_setPinMapping(void)
   
   //set pins
   setPortMode(LED_BUILTIN, OUTPUT);  
-  if (configPage1.can0RXIntPin > DPIN_DISABLED) { Pin_can0RXInt = pinTranslate(configPage1.can0RXIntPin); setPortMode(Pin_can0RXInt,OUTPUT); }
+  if (configPage1.can0RXIntPin > DPIN_DISABLED) { Pin_can0RXInt = pinTranslate(configPage1.can0RXIntPin); setPortMode(Pin_can0RXInt,INPUT_PULLUP); }
   
   if (configPage1.analogSelectorEn == APIN_ENABLED) { Pin_analogSelector = configPage1.analogSelectorPin; }
   
@@ -64,7 +64,7 @@ uint16_t readAnalog(uint8_t AinCH)
     #if defined(MCU_STM32F103C8)
     tempReading >>= 2;  //rescales to max 1024 value else would be 0-4096
     #endif
-    currentStatus.Analog[AinCH] = tempReading;
+    Out_TS.Vars.Analog[AinCH] = tempReading;
   }
     
 return tempReading;
@@ -76,7 +76,7 @@ return tempReading;
 uint8_t readDigitalPort(uint8_t Dpin)
 {
   uint8_t pinValue = 0;
-  if (Dpin < BOARD_NR_GPIO_PINS)
+  if (Dpin < BOARD_MAX_IO_PINS)
   {
     if (Dpin < 16)
     {
@@ -128,6 +128,13 @@ uint8_t readDigitalPort(uint8_t Dpin)
     }
   }
   //else pinValue is not configured as an output (out of pin range)
+  
+  //Align output data to TS
+  Out_TS.Vars.digitalPorts0_15_out = digitalPorts0_15.value;
+  Out_TS.Vars.digitalPorts16_31_out = digitalPorts16_31.value;
+  Out_TS.Vars.digitalPorts32_47_out = digitalPorts32_47.value;
+  Out_TS.Vars.digitalPorts48_63_out = digitalPorts48_63.value;
+  
   return pinValue;
 }
 
@@ -140,7 +147,7 @@ uint8_t readDigitalPort(uint8_t Dpin)
 * returns: 0 = write successful, 1 = failed */
 uint8_t setDigitalPort(uint8_t Dpin, uint8_t value, uint8_t setOverride)
 {
-  if (Dpin < BOARD_NR_GPIO_PINS)
+  if (Dpin < BOARD_MAX_IO_PINS)
   {
     if (Dpin < 16)
     {
@@ -228,7 +235,7 @@ uint8_t setDigitalPort(uint8_t Dpin, uint8_t value, uint8_t setOverride)
 * returns: 0 = set successful, 1 = failed */
 uint8_t setPortMode(uint8_t Dpin, uint8_t pinmode)
 {
-  if (Dpin < BOARD_NR_GPIO_PINS)
+  if (Dpin < BOARD_MAX_IO_PINS)
   {
     pinMode(Dpin, pinmode);
     if (Dpin < 16)
@@ -264,7 +271,7 @@ uint8_t setPortMode(uint8_t Dpin, uint8_t pinmode)
 * returns: 0 = set successful, 1 = failed */
 uint8_t setPortOverride(uint8_t Dpin, uint8_t isOverride)
 {
-  if (Dpin < BOARD_NR_GPIO_PINS)
+  if (Dpin < BOARD_MAX_IO_PINS)
   {
     if (Dpin < 16)
     {

@@ -11,7 +11,7 @@
 /*Variables Local to this module */
 
 uint16_t COMS_readsPerSecCount; // used for calculating the number of serial data reads per sec.
-byte fullStatus[FULLSTATUS_SIZE];
+//byte fullStatus[FULLSTATUS_SIZE];
 byte currentSerialCmd = 0x00; // Current serial command in progress.
 byte Serial_r_Cmnd = false; // if true the 'r' command is currently in progress and awaiting more data.
 byte COMS_EEPROMBurnCmnd = false; // if true the burn is currently in progress and awaiting eeprom availabiltiy.
@@ -36,16 +36,16 @@ void direct_serial_command()
     switch (currentSerialCmd)
           {
           case 'A':
-                  direct_sendValues(0, FULLSTATUS_SIZE, 60);//(offset,packet size lenght,cmd)
+                  direct_sendValues(0, configPage1.ochBlockSizeSent, 60);//(offset,packet size lenght,cmd)
                   if(COMS_readsPerSecCount < 65535) { COMS_readsPerSecCount++; }
           break; 
            
           case 'B': // Burn current values to eeprom
                   //A 2nd byte of data is required after the 'P' specifying the new page number.
                   while (TS_SERIALLink.available() == 0) {}
-                  currentStatus.currentPage = TS_SERIALLink.read();
-                  BIT_CLEAR(currentStatus.systembits, BIT_SYSTEM_BURN_GOOD); //clear burn_good flag
-                  STOR_writeConfig(currentStatus.currentPage);
+                  currentPage = TS_SERIALLink.read();
+                  BIT_CLEAR(Out_TS.Vars.systembits, BIT_SYSTEM_BURN_GOOD); //clear burn_good flag
+                  STOR_writeConfig(currentPage);
           break;
 
           case 'C': // test communications. This is used by Tunerstudio to see whether there is an ECU on a given serial port
@@ -70,9 +70,9 @@ void direct_serial_command()
           case 'P': // set the current page
                     //A 2nd byte of data is required after the 'P' specifying the new page number.
                   while (TS_SERIALLink.available() == 0) {}
-                  currentStatus.currentPage = TS_SERIALLink.read();
-                  if (currentStatus.currentPage >= '0') {//This converts the ascii number char into binary
-                  currentStatus.currentPage -= '0';
+                  currentPage = TS_SERIALLink.read();
+                  if (currentPage >= '0') {//This converts the ascii number char into binary
+                  currentPage -= '0';
                   }
           break;
       
@@ -88,7 +88,7 @@ void direct_serial_command()
                     for (unsigned int sg = 0; sg < sizeof(ECU_RevNum) - 1; sg++)
                         {
                         TS_SERIALLink.write(ECU_RevNum[sg]);
-                        currentStatus.secl = 0; //This is required in TS3 due to its stricter timings
+                        Out_TS.Vars.secl = 0; //This is required in TS3 due to its stricter timings
                         }
           break;
 
@@ -146,7 +146,7 @@ void direct_serial_command()
           break;
     }
 
-//currentStatus.dev2 = (uint16_t)(micros() - serialLoopStartMicros); 
+//Out_TS.Vars.dev2 = (uint16_t)(micros() - serialLoopStartMicros); 
  
 }
 
@@ -166,7 +166,7 @@ void dolocal_rCommands(uint8_t commandletter, uint8_t canid, uint16_t theoffset,
                     for (unsigned int sg = 0; sg < sizeof(ECU_RevNum) - 1; sg++)
                         {
                         TS_SERIALLink.write(ECU_RevNum[sg]);
-                        currentStatus.secl = 0; //This is required in TS3 due to its stricter timings
+                        Out_TS.Vars.secl = 0; //This is required in TS3 due to its stricter timings
                         }     
            break;
                         
@@ -182,17 +182,17 @@ void dolocal_rCommands(uint8_t commandletter, uint8_t canid, uint16_t theoffset,
 
            case 66: // r version of B == 0x42
                     // Burn current values to eeprom
-                    if (bitRead(currentStatus.systembits, BIT_SYSTEM_BURN_GOOD) == false) // Previous burn not complete while another burn command has been issued.
+                    if (bitRead(Out_TS.Vars.systembits, BIT_SYSTEM_BURN_GOOD) == false) // Previous burn not complete while another burn command has been issued.
                     {
-                      while (bitRead(currentStatus.systembits, BIT_SYSTEM_BURN_GOOD) == false)
+                      while (bitRead(Out_TS.Vars.systembits, BIT_SYSTEM_BURN_GOOD) == false)
                       { // If multiple burn commands recieved just sit and wait for previous burn to finish. Blocking, but robust.
                         STOR_writeConfigNoBlock(); 
                       }
                     }
                     // If we are here, either after waiting for the previous burn or with no burn pending
                     // COMS_EEPROMBurnCmnd = false and eeprom is good to write next burn command.
-                    currentStatus.currentPage = byte(theoffset);
-                    BIT_CLEAR(currentStatus.systembits, BIT_SYSTEM_BURN_GOOD); //clear burn_good flag
+                    currentPage = byte(theoffset);
+                    BIT_CLEAR(Out_TS.Vars.systembits, BIT_SYSTEM_BURN_GOOD); //clear burn_good flag
                     //STOR_writeConfigNoBlock(); is called from the main loop to check on burn progress.
            break;
            
@@ -201,7 +201,7 @@ void dolocal_rCommands(uint8_t commandletter, uint8_t canid, uint16_t theoffset,
            break;
                                
            case 80:  //r version of P == 0x50
-                  currentStatus.currentPage = byte(theoffset);
+                  currentPage = byte(theoffset);
            break;
           
            case 86:  //r version of V == 0x56
@@ -221,7 +221,7 @@ void direct_receiveValue(uint16_t rvOffset, uint8_t newValue)
         
   void* pnt_configPage;//This only stores the address of the value that it's pointing to and not the max size
 
-  switch (currentStatus.currentPage)
+  switch (currentPage)
   {
 
     case 1:
@@ -291,7 +291,7 @@ void direct_sendPage(uint16_t send_page_offset, uint16_t send_page_Length, byte 
  
         void* pnt_configPage;
 
-        switch (currentStatus.currentPage)
+        switch (currentPage)
           {
 
             case 1:
@@ -345,6 +345,7 @@ void direct_sendPage(uint16_t send_page_offset, uint16_t send_page_Length, byte 
 
           if (cmd == 206)   //came via passthrough from serial3
             {
+#if defined(AUX_SERIAL_ENBL)
               AUX_SERIALLink.print("r");
               AUX_SERIALLink.write(thistsCanId);                //canId of the device you are requesting data from
               AUX_SERIALLink.write(cmd);                       //  
@@ -352,7 +353,8 @@ void direct_sendPage(uint16_t send_page_offset, uint16_t send_page_Length, byte 
               AUX_SERIALLink.write(0x00);                       // dummy offset msb
               AUX_SERIALLink.write(lowByte(send_page_Length));  // length lsb
               AUX_SERIALLink.write(highByte(send_page_Length)); // length msb
-              AUX_SERIALLink.write((uint8_t *)&response, sizeof(response));          
+              AUX_SERIALLink.write((uint8_t *)&response, sizeof(response));
+#endif              
             }
           else
           {  
@@ -370,101 +372,26 @@ void direct_receiveCalibration(byte tableID)
 }
 
 /*
- this function reads the realtime data into the fullStatus array
-*/
- void direct_read_realtime()
- {
-  fullStatus[0] = currentStatus.secl; //secl is simply a counter that increments each second. Used to track unexpected resets (Which will reset this count to 0)
-  fullStatus[1] = currentStatus.systembits; //Squirt Bitfield
-  fullStatus[2] = currentStatus.canstatus;  //canstatus Bitfield
-  fullStatus[3] = lowByte(currentStatus.loopsPerSecond);
-  fullStatus[4] = highByte(currentStatus.loopsPerSecond);
-  fullStatus[5] = lowByte(currentStatus.UTIL_freeRam);
-  fullStatus[6] = highByte(currentStatus.UTIL_freeRam);
-  fullStatus[7] = lowByte(mainLoopCount);
-  fullStatus[8] = highByte(mainLoopCount);
-  fullStatus[9] = TIMR_LoopDlyWarnBits; // Bitfield of warnings that a task was delayed to the point where it was skipped.
-  fullStatus[10] = 0x00; // Spare was .dev1
-  fullStatus[11] = lowByte(currentStatus.dev2);
-  fullStatus[12] = highByte(currentStatus.dev2);
-  fullStatus[13] = currentStatus.testIO_hardware;
-  fullStatus[14] = lowByte(digitalPorts0_15.value);
-  fullStatus[15] = highByte(digitalPorts0_15.value);
-  fullStatus[16] = lowByte(digitalPorts16_31.value);
-  fullStatus[17] = highByte(digitalPorts16_31.value);
-  fullStatus[18] = lowByte(digitalPorts32_47.value);    
-  fullStatus[19] = highByte(digitalPorts32_47.value);
-  fullStatus[20] = lowByte(digitalPorts48_63.value);    
-  fullStatus[21] = highByte(digitalPorts48_63.value);
-  fullStatus[22] = lowByte(currentStatus.Analog[0]);
-  fullStatus[23] = highByte(currentStatus.Analog[0]);
-  fullStatus[24] = lowByte(currentStatus.Analog[1]);
-  fullStatus[25] = highByte(currentStatus.Analog[1]);
-  fullStatus[26] = lowByte(currentStatus.Analog[2]);
-  fullStatus[27] = highByte(currentStatus.Analog[2]);
-  fullStatus[28] = lowByte(currentStatus.Analog[3]);
-  fullStatus[29] = highByte(currentStatus.Analog[3]);  
-  fullStatus[30] = lowByte(currentStatus.Analog[4]);
-  fullStatus[31] = highByte(currentStatus.Analog[4]);
-  fullStatus[32] = lowByte(currentStatus.Analog[5]);
-  fullStatus[33] = highByte(currentStatus.Analog[5]);
-  fullStatus[34] = lowByte(currentStatus.Analog[6]);
-  fullStatus[35] = highByte(currentStatus.Analog[6]);
-  fullStatus[36] = lowByte(currentStatus.Analog[7]);
-  fullStatus[37] = highByte(currentStatus.Analog[7]);
-  fullStatus[38] = lowByte(currentStatus.Analog[8]);
-  fullStatus[39] = highByte(currentStatus.Analog[8]);
-  fullStatus[40] = lowByte(currentStatus.Analog[9]);
-  fullStatus[41] = highByte(currentStatus.Analog[9]);
-  fullStatus[42] = lowByte(currentStatus.Analog[10]);
-  fullStatus[43] = highByte(currentStatus.Analog[10]);
-  fullStatus[44] = lowByte(currentStatus.Analog[11]);
-  fullStatus[45] = highByte(currentStatus.Analog[11]);  
-  fullStatus[46] = lowByte(currentStatus.Analog[12]);
-  fullStatus[47] = highByte(currentStatus.Analog[12]);
-  fullStatus[48] = lowByte(currentStatus.Analog[13]);
-  fullStatus[49] = highByte(currentStatus.Analog[13]);
-  fullStatus[50] = lowByte(currentStatus.Analog[14]);
-  fullStatus[51] = highByte(currentStatus.Analog[14]);
-  fullStatus[52] = lowByte(currentStatus.Analog[15]);
-  fullStatus[53] = highByte(currentStatus.Analog[15]);    
-  //Vf_i_TestFloatOut
-  fullStatus[54] = VS_serialData.serialPacket[0];
-  fullStatus[55] = VS_serialData.serialPacket[1];
-  fullStatus[56] = VS_serialData.serialPacket[2];
-  fullStatus[57] = VS_serialData.serialPacket[3];
-  fullStatus[58] = VS_serialData.serialPacket[4]; //Ve_i_TestByte1
-  fullStatus[59] = lowByte(currentStatus.dev1);
-  fullStatus[60] = highByte(currentStatus.dev1);
-  fullStatus[61] = lowByte(currentStatus.dev3);
-  fullStatus[62] = highByte(currentStatus.dev3);
-  fullStatus[63] = lowByte(currentStatus.dev4);
-  fullStatus[64] = highByte(currentStatus.dev4);
-  fullStatus[65] = lowByte(currentStatus.readsPerSecond);
-  fullStatus[66] = highByte(currentStatus.readsPerSecond);
-  
-  
- }
-
-/*
 this function sends the realtime data to TS
 */ 
 void direct_sendValues(uint16_t theOffset, uint16_t packetLength, uint8_t cmd)
 {
+  uint8_t valuesSize =  sizeof(Out_TS_t);
   if (packetLength > 0x00) // Make sure we have some data to send
   {
-    direct_read_realtime();    
-    if (packetLength > FULLSTATUS_SIZE) { packetLength = FULLSTATUS_SIZE; }
+    //direct_read_realtime();    
+    if (packetLength > valuesSize) { packetLength = valuesSize; }
     
     if (cmd == 60) // Respond to console
     {
       for(uint16_t x=theOffset; x < (theOffset + packetLength); x++)
       {
-        TS_SERIALLink.write(fullStatus[x]);
+        TS_SERIALLink.write(Out_TS.byteData[x]);
       }
     }
     else if (cmd == 180) // respond to 2nd serial link
     {
+#if defined(AUX_SERIAL_ENBL)
       //TS_SERIALLink.print("r was sent");
       AUX_SERIALLink.write("r");         //confirm cmd letter 
       AUX_SERIALLink.write(0x00);           //canid
@@ -473,10 +400,11 @@ void direct_sendValues(uint16_t theOffset, uint16_t packetLength, uint8_t cmd)
       AUX_SERIALLink.write(highByte(theOffset));                      //start theOffset msb
       AUX_SERIALLink.write(lowByte(packetLength));      //confirm no of byte to be sent
       AUX_SERIALLink.write(highByte(packetLength));      //confirm no of byte to be sent
+#endif
       
       for(uint16_t x=theOffset; x < (theOffset + packetLength); x++)
       {
-        TS_SERIALLink.write(fullStatus[x]);
+        TS_SERIALLink.write(Out_TS.byteData[x]);
       } 
     }
   }
@@ -485,10 +413,10 @@ void direct_sendValues(uint16_t theOffset, uint16_t packetLength, uint8_t cmd)
 void commandButtons(uint16_t cmdCombined)
 {
   
- // currentStatus.dev1 = cmdCombined;
+ // Out_TS.Vars.dev1 = cmdCombined;
   if(cmdCombined == 256)
   {// cmd is stop    
-    BIT_CLEAR(currentStatus.testIO_hardware, BIT_TESTHW_ACTIVE);    //clear testactive flag
+    BIT_CLEAR(Out_TS.Vars.testIO_hardware, BIT_TESTHW_ACTIVE);    //clear testactive flag
     digitalPorts0_15.isOverride = 0; // clear all override flags.
     digitalPorts16_31.isOverride = 0;
     digitalPorts32_47.isOverride = 0;
@@ -499,7 +427,7 @@ void commandButtons(uint16_t cmdCombined)
   { 
     if (configPage1.allowHWTestMode == true)
     {
-      BIT_SET(currentStatus.testIO_hardware, BIT_TESTHW_ACTIVE);  //set testactive flag
+      BIT_SET(Out_TS.Vars.testIO_hardware, BIT_TESTHW_ACTIVE);  //set testactive flag
     }
   }
   
@@ -534,10 +462,10 @@ void commandButtons(uint16_t cmdCombined)
   else if ((cmdCombined >=513) && (cmdCombined <= 576)) //64 digital ports
   {
     // Turn a port to HIGH state and set override flag
-    if(BIT_CHECK(currentStatus.testIO_hardware, BIT_TESTHW_ACTIVE))
+    if(BIT_CHECK(Out_TS.Vars.testIO_hardware, BIT_TESTHW_ACTIVE))
     {
       setDigitalPort((cmdCombined-513), HIGH, OUTPUT_OVERRIDE);
-      //BIT_SET(currentStatus.digOut, (cmdCombined-513));
+      //BIT_SET(Out_TS.Vars.digOut, (cmdCombined-513));
     }
   }
   
@@ -545,10 +473,10 @@ void commandButtons(uint16_t cmdCombined)
   else if ((cmdCombined >=769) && (cmdCombined <= 832)) //64 digital ports
   {
     // Turn a port to LOW state and set override flag
-    if(BIT_CHECK(currentStatus.testIO_hardware, BIT_TESTHW_ACTIVE))
+    if(BIT_CHECK(Out_TS.Vars.testIO_hardware, BIT_TESTHW_ACTIVE))
       {
         setDigitalPort((cmdCombined-769), LOW, OUTPUT_OVERRIDE);
-        //BIT_CLEAR(currentStatus.digOut, (cmdCombined-769));
+        //BIT_CLEAR(Out_TS.Vars.digOut, (cmdCombined-769));
       }
   }
   

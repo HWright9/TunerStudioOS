@@ -37,24 +37,18 @@ struct config4 configPage4;
 struct config5 configPage5;
 #endif
 
-#if defined(ARDUINO_AVR_MEGA2560)
-    HardwareSerial &AUX_SERIALLink = Serial3; // setup which serial port connects to the speeduino secondary serial
-    HardwareSerial &TS_SERIALLink  = Serial;   // setup which serial port connects to TS
+HardwareSerial &TS_SERIALLink  = Serial;   // setup which serial port connects to TS
 
-#elif defined (ARDUINO_AVR_UNO)
-    HardwareSerial &AUX_SERIALLink = Serial; // setup which serial port connects to the speeduino secondary serial
-    HardwareSerial &TS_SERIALLink  = Serial;   // setup which serial port connects to TS
-#else
-    #error Incorrect board selected. Currently AVR Mega2560 and UNO supported. Please select the correct board and upload again
+#if defined(AUX_SERIAL_ENBL)
+    HardwareSerial &AUX_SERIALLink = Serial3; // setup which serial port connects to the speeduino secondary serial
 #endif 
 
-volatile uint16_t mainLoopCount;
 uint8_t Ve_t_WarningTimeoutTmr_100ms; // timer with 100ms resolution for warning light timeout.
-
+volatile uint16_t mainLoopCount;
 
 void setup() {
   
-  currentStatus.systembits = 0; // clear all system bits.
+  Out_TS.Vars.systembits = 0; // clear all system bits.
   STOR_loadConfig();            
   INIT_setPinMapping();
   INIT_ADC();
@@ -62,11 +56,13 @@ void setup() {
   INIT_readOnlyVars();
 
   TS_SERIALLink.begin(115200);
-  AUX_SERIALLink.begin(115200);  
+#if defined(AUX_SERIAL_ENBL)
+  AUX_SERIALLink.begin(115200);
+#endif  
   
   mainLoopCount = 0;
-  currentStatus.secl = 0;
-  BIT_SET(currentStatus.systembits, BIT_SYSTEM_READY); //set system ready flag
+  Out_TS.Vars.secl = 0;
+  BIT_SET(Out_TS.Vars.systembits, BIT_SYSTEM_READY); //set system ready flag
   
   INIT_timers(); //init timers at the end so that ECU timing is good.
 }
@@ -141,18 +137,19 @@ void loop()
   /* This is a do-while-nothing-else-happening task to avoid serial sending affecting other timed tasks */
   if (Le_Cnt_TimedTasksThisLoop == 0)
   {   
-    
+#if defined  (AUX_SERIAL_ENBL)     
     if (AUX_SERIALLink.available() > 0)      // if AUX_SERIALLink has data then do the remote serial command subroutine
     {
       //remote_serial_command();
     }
+#endif
 
     if (TS_SERIALLink.available() > 0)      // if TS_SERIALLink has data then do the direct serial command subroutine(Typical TS link)
     {
       direct_serial_command();
     }
 
-    if (bitRead(currentStatus.canstatus, BIT_CANSTATUS_CAN0ACTIVATED) == true)
+    if (bitRead(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0ACTIVATED) == true)
     {
       if(digitalRead(Pin_can0RXInt) == LOW )   // If CAN0_INT pin is low, read receive buffer
       {
@@ -161,11 +158,13 @@ void loop()
     }
   }
   
-  /* these next two serial checks are untimed and designed to catch the serial buffer overflow if for some reason there isn't spare time in the main loop. */    
+  /* these next two serial checks are untimed and designed to catch the serial buffer overflow if for some reason there isn't spare time in the main loop. */ 
+#if defined  (AUX_SERIAL_ENBL) 
   if (AUX_SERIALLink.available() > 32) 
   {
     //remote_serial_command();   -Implementation TODO             
-  }     
+  }
+#endif     
         
   if (TS_SERIALLink.available() > 32) 
   {
@@ -173,7 +172,7 @@ void loop()
   }
   
   /* Check if we need to write the EEPROM */
-  if (bitRead(currentStatus.systembits, BIT_SYSTEM_BURN_GOOD) == false)
+  if (bitRead(Out_TS.Vars.systembits, BIT_SYSTEM_BURN_GOOD) == false)
     {
       STOR_writeConfigNoBlock();
     }
@@ -229,11 +228,13 @@ void FUNC_100msTask(void)
 {  
   canBroadcast_100ms();
   
+  recieveCAN_Timeouts();
+  
   SYS_setWarningBit();
   
-  VS_serialData.Data.Vf_i_TestFloatOut = configPage2.Kf_i_TestFloat1 + configPage2.Kf_i_TestFloat2;
+  Out_TS.Vars.Vf_i_TestFloatOut = configPage2.Kf_i_TestFloat1 + configPage2.Kf_i_TestFloat2;
   
-  currentStatus.dev4 = u8_table2DLookup_u8(configPage2.exampleTable_Xaxis, configPage2.exampleTable_Ydata, sizeof(configPage2.exampleTable_Xaxis), configPage2.exampleLookupValue);
+  Out_TS.Vars.dev4 = u8_table2DLookup_u8(configPage2.exampleTable_Xaxis, configPage2.exampleTable_Ydata, sizeof(configPage2.exampleTable_Xaxis), configPage2.exampleLookupValue);
 
   USER_InputOutput();
     
@@ -268,7 +269,7 @@ void FUNC_1000msTask(void)
   CAN0_maintenance();
   canBroadcast_1000ms();
   
-  currentStatus.readsPerSecond = COMS_readsPerSecCount;
+  Out_TS.Vars.readsPerSecond = COMS_readsPerSecCount;
   COMS_readsPerSecCount = 0;
 
 } //END 1000ms Task
@@ -283,8 +284,10 @@ void FUNC_1000msTask(void)
 void INIT_readOnlyVars(void)
 {
   
+  //This sends the ochBlockSize variable that is used in TunerStudio to know how long the serial data stream is going to be.
+  configPage1.ochBlockSizeSent = sizeof(Out_TS_t);
+  
   //These run once to calculate the page sizes.
-  configPage1.ochBlockSizeSent = FULLSTATUS_SIZE;
   configPage1.page1ActualSize = sizeof(configPage1);
   configPage1.page1CRC = 0;
   STOR_writeConfig(1); // re-write the config in case any of the above changes. normally this does nothing because the EEPROM will skip all the variables that are the same.
@@ -316,13 +319,13 @@ void INIT_readOnlyVars(void)
 void SYS_setWarningBit(void)
 {
   //The following can be used to show the amount of free memory
-  currentStatus.UTIL_freeRam = UTIL_freeRam();
+  Out_TS.Vars.UTIL_freeRam = UTIL_freeRam();
   
   if ((TIMR_LoopDlyWarnBits > 0) || // any of the loop timer overflow warnings are set
-      (currentStatus.UTIL_freeRam < 500) || // running out of RAM
-      (currentStatus.loopsPerSecond < 200)) // slow loops
+      (Out_TS.Vars.UTIL_freeRam < 500) || // running out of RAM
+      (Out_TS.Vars.loopsPerSecond < 200)) // slow loops
   {
-    BIT_SET(currentStatus.systembits, BIT_SYSTEM_WARNING); //set system warning flag
+    BIT_SET(Out_TS.Vars.systembits, BIT_SYSTEM_WARNING); //set system warning flag
     Ve_t_WarningTimeoutTmr_100ms = 0; 
   }
   else if (Ve_t_WarningTimeoutTmr_100ms < 20) // 20 is 20*100ms = 2sec
@@ -331,7 +334,7 @@ void SYS_setWarningBit(void)
   } 
   else 
   { 
-    BIT_CLEAR(currentStatus.systembits, BIT_SYSTEM_WARNING); //clear system warning flag after timer expired
+    BIT_CLEAR(Out_TS.Vars.systembits, BIT_SYSTEM_WARNING); //clear system warning flag after timer expired
   }
 }
 

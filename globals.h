@@ -15,7 +15,6 @@
   #define AVR_WDT
   
 #elif defined(CORE_TEENSY)
-  #define BOARD_NR_GPIO_PINS 34
   #define EEPROM_SIZE_8KB
   
 #elif defined(STM32_MCU_SERIES) || defined(_VARIANT_ARDUINO_STM32_)
@@ -35,20 +34,24 @@
 // now set specific processor compile flags
 #if defined(__AVR_ATmega1280__) || defined(ARDUINO_AVR_MEGA2560) || defined(__AVR_ATmega2561__)
   #define EEPROM_SIZE_8KB
+  #define AUX_SERIAL_ENBL
   #define MEGA_AVR
-  #define BOARD_NR_GPIO_PINS 54
   #define BOARD_MAX_IO_PINS  58 //digital pins + analog channels + 1
   #define BOARD_MAX_DIGITAL_PINS 52
   #define BOARD_MAX_ADC_PINS 15
   
+#elif defined(ARDUINO_AVR_NANO)
+  #define BOARD_MAX_IO_PINS 20 //digital pins + analog channels + 1
+  #define BOARD_MAX_DIGITAL_PINS 13
+  #define BOARD_MAX_ADC_PINS 6
+  
 #elif defined(ARDUINO_AVR_UNO)
-  #define BOARD_NR_GPIO_PINS 19
   #define BOARD_MAX_IO_PINS  20 //digital pins + analog channels + 1
   #define BOARD_MAX_DIGITAL_PINS 13
   #define BOARD_MAX_ADC_PINS 6
 
 #else
-  #error Incorrect board selected. Currently AVR Mega2560 and UNO supported. Please select the correct board and upload again
+  #error Incorrect board selected. Currently AVR Mega2560, NANO and UNO supported. Please select the correct board and upload again
 #endif 
 
 // global true/false statements
@@ -126,6 +129,10 @@
 #define BIT_TIMER_20MS          6
 #define BIT_TIMER_5MS           7
 
+//Can RX message status
+#define CANRX_MOTECPLM_DFLT    0 // bit 0 is motec PLM.
+#define CANRX_UNDEFINEDMSG_DFLT      1 // next message and so on...
+
 /* Global Variables Outside status */
 uint8_t tsCanId = 0;          // this is the tunerstudio canID for the device you are requesting data from , this is 0 for the main ecu in the system which is usually the speeduino ecu . 
                               // this value is set in Tunerstudio when configuring your Speeduino
@@ -143,39 +150,47 @@ const uint16_t page_4_size = 512;
 const uint16_t page_5_size = 512;
 #endif
 
+uint8_t currentPage = 0; // TS controlled page for reading and writing EEPROM.
 
-//The status struct contains the current values for all 'live' variables
-struct statuses {
-  volatile byte secl; //Continous
-  volatile byte systembits ;
-  volatile byte canstatus;    //canstatus bitfield
-  volatile uint8_t remote_output_status[32];    //remote output condition status bitfield
-  volatile unsigned int loopsPerSecond ;
-  volatile  uint16_t UTIL_freeRam ;
-  volatile uint8_t currentPage;
-  volatile uint8_t testIO_hardware;//testIO_hardware
-  volatile uint16_t Analog[16];    // 16bit analog value data array for local analog(0-15)
-  
-  volatile uint16_t dev1;          //developer use only
-  volatile uint16_t dev2;          //developer use only
-  volatile uint16_t dev3;          //developer use only
-  volatile uint16_t dev4;          //developer use only
-  volatile uint16_t readsPerSecond; // how many datalog reads in the last sec
-};
-struct statuses currentStatus; //The global status object
-
-typedef struct status_t
+/* The global serial transmit status object.
+* All variables in this list will be transmitted to Tuner Studio in the order presented here.
+* Its critical that the order of variables here must match exactly what tuner studio .ini file is set up to recieve in the [OutputChannels] section.
+* The total size of this variable is captured in ochBlockSizeSent which can be read in Tuner Studio on page 1.
+* Its highly reccomended to keep the variable names the same between the .ini file and this code.
+*/
+typedef struct Out_TS_t
 {
+  uint8_t secl; // counter of seconds 0-255 looping, required for TS comms.
+  uint8_t systembits; //system status bits
+  uint8_t LoopDlyWarnBits; //indicator that a l
+  uint8_t canstatus;    //canstatus bitfield
+  uint16_t canRXmsg_dflt; //check if CAN RX messages are defaulted due to RX timeout
+  uint16_t loopsPerSecond;
+  uint16_t readsPerSecond; // how many datalog reads in the last sec
+  uint16_t UTIL_freeRam;
+  uint8_t testIO_hardware;//testIO_hardware
+  uint16_t digitalPorts0_15_out;
+  uint16_t digitalPorts16_31_out;
+  uint16_t digitalPorts32_47_out;
+  uint16_t digitalPorts48_63_out;
+  uint16_t Analog[16];    // 16bit analog value data array for local analog(0-15)
+  
+  uint16_t dev1;          //developer use only
+  uint16_t dev2;          //developer use only
+  uint16_t dev3;          //developer use only
+  uint16_t dev4;          //developer use only
   float Vf_i_TestFloatOut;
   uint8_t Ve_i_TestByte1;
+  float Ve_Eqr_Sensor1;
 };
 
-typedef union statuses_Pac_t
+// this union of structures is to make it easier to transmit multiple data types via serial
+typedef union Out_TS_Pac_t
 {
-  status_t Data;
-  byte serialPacket[sizeof(status_t)];
+  Out_TS_t Vars;
+  byte byteData[sizeof(Out_TS_t)];
 }; 
-statuses_Pac_t VS_serialData;
+Out_TS_Pac_t Out_TS;
 
 
 typedef struct digitalPorts_t
@@ -207,6 +222,8 @@ struct __attribute__ ( ( packed ) ) config1
   uint8_t allowHWTestMode: 1;  // EEPROM based lockout of the hardware test mode. Prevents inadvertent serial data from accidently enabling this mode.
   uint8_t allowEEPROMClear: 1;  // EEPROM based lockout of the EEPROM wipe function. Prevents inadvertent serial data from accidently enabling this mode.
   uint8_t unused1_9_bits: 1;
+  
+  uint16_t canRXmsg_MotecPLM; // can Address for motec PLM message.
 
 
 //#if defined(CORE_AVR)

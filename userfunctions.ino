@@ -42,12 +42,12 @@ void USER_InputOutput(void)
   {
     readDigitalPort(i);
   }
-  for (i = 0; i < BOARD_MAX_ADC_PINS; i++)
+  for (i = 0; i <= BOARD_MAX_ADC_PINS; i++)
   {
     readAnalog(i);
   }
-  if (configPage1.analogSelectorEn == APIN_ENABLED) { currentStatus.dev3 = readAnalog(Pin_analogSelector); }
+  if (configPage1.analogSelectorEn == APIN_ENABLED) { Out_TS.Vars.dev3 = readAnalog(Pin_analogSelector); }
   
-  VS_serialData.Data.Ve_i_TestByte1 = lowPassFilter_u16(currentStatus.Analog[0]/4, (uint8_t)configPage2.Ke_i_TestValue, VS_serialData.Data.Ve_i_TestByte1);
+  Out_TS.Vars.Ve_i_TestByte1 = lowPassFilter_u16(Out_TS.Vars.Analog[0]/4, (uint8_t)configPage2.Ke_i_TestValue, Out_TS.Vars.Ve_i_TestByte1);
   
 }
