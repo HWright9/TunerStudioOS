@@ -1,4 +1,23 @@
-TunerStudio_OS_dev
+TunerStudio_OS_dev Release Notes
+
+
+----------------------------------------------------------------------------------------------------------
+Release v0.3
+18-July-2023
+Henry Wright.
+
+Added support for Arduino Nano.
+
+Added a template for recieving a can message object with diagnostics and tested this with a motec PLM.
+
+Revised the way that data is sent to Tuner studio by removing the "CurrentStatus" structure and replaced it with a Out_TS data structure union.
+
+This makes it much easier to send multiple data types (gets rid of LowByte and HighByte) saves 80bytes of memory and in conjunction with the .ini use of NextOffset and LastOffset, easier and quicker to insert new variables.
+
+Other small bugfixes included.
+
+Development Direction:
+ - CAN bus OBD structure
 
 ----------------------------------------------------------------------------------------------------------
 Release v0.2

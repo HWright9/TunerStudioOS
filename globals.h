@@ -138,8 +138,8 @@ uint8_t tsCanId = 0;          // this is the tunerstudio canID for the device yo
                               // this value is set in Tunerstudio when configuring your Speeduino
 uint8_t thistsCanId = 4;      // this is the tunerstudio canId of this device
 
-const unsigned char ECU_signature[]    = "speeduino_TS_OS_V0.20_dev";       //this must match the ini
-const unsigned char ECU_RevNum[]       = "TS_OS_V0.20_dev";      //this is what is displayed in the TS header bar
+const unsigned char ECU_signature[]    = "speeduino_TS_OS_V0.30_dev";       //this must match the ini
+const unsigned char ECU_RevNum[]       = "TS_OS_V0.30_dev";      //this is what is displayed in the TS header bar
 
 const uint8_t  data_structure_version = 2; //This identifies the data structure when reading / writing.
 const uint8_t  page_1_size = 128;
