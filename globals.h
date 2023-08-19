@@ -263,7 +263,7 @@ struct __attribute__ ( ( packed ) ) config3
   uint16_t page3ActualSize;  //TS READ ONLY: to check page size in development. This should never exceed the defined page sizes.
   uint32_t page3CRC;         //TS READ ONLY: Future expansion EEPROM CRC for error checking.
 
-  uint8_t unused3_0_511[506];
+//  uint8_t unused3_0_511[506];
 
 //#if defined(CORE_AVR)
 };
@@ -278,7 +278,7 @@ struct __attribute__ ( ( packed ) ) config4
 {
   uint16_t page4ActualSize;  //TS READ ONLY: to check page size in development. This should never exceed the defined page sizes.
   uint32_t page4CRC;         //TS READ ONLY: Future expansion EEPROM CRC for error checking.
-  uint8_t unused4_0_511[506];
+ // uint8_t unused4_0_511[506];
 
 //#if defined(CORE_AVR)
 };
@@ -293,7 +293,7 @@ struct __attribute__ ( ( packed ) ) config5
   uint16_t page5ActualSize;  //TS READ ONLY: to check page size in development. This should never exceed the defined page sizes.
   uint32_t page5CRC;         //TS READ ONLY: Future expansion EEPROM CRC for error checking.
 
-  byte unused5_0_511[506];                                  //2
+ // byte unused5_0_511[506];                                  //2
 
 //#if defined(CORE_AVR)
 };
