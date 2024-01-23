@@ -117,8 +117,6 @@ void receive_CAN0_message()
     else  
       {
        // id is std 11 bit
-       Out_TS.Vars.dev3 = rxId;
-       Out_TS.Vars.dev2 = configPage1.canRXmsg_MotecPLM;
        if (rxId == configPage1.canRXmsg_MotecPLM)
        {
          canRx_MotecPLM_O2(len, rxBuf);

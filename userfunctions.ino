@@ -46,7 +46,6 @@ void USER_InputOutput(void)
   {
     readAnalog(i);
   }
-  if (configPage1.analogSelectorEn == APIN_ENABLED) { Out_TS.Vars.dev3 = readAnalog(Pin_analogSelector); }
   
   Out_TS.Vars.Ve_i_TestByte1 = lowPassFilter_u16(Out_TS.Vars.Analog[0]/4, (uint8_t)configPage2.Ke_i_TestValue, Out_TS.Vars.Ve_i_TestByte1);
   

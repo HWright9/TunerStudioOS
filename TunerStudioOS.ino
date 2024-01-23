@@ -232,10 +232,17 @@ void FUNC_100msTask(void)
   
   SYS_setWarningBit();
   
+  // Example of floating points
   Out_TS.Vars.Vf_i_TestFloatOut = configPage2.Kf_i_TestFloat1 + configPage2.Kf_i_TestFloat2;
-  
+  // Example of 2d 8bit Table lookup
   Out_TS.Vars.dev4 = u8_table2DLookup_u8(configPage2.exampleTable_Xaxis, configPage2.exampleTable_Ydata, sizeof(configPage2.exampleTable_Xaxis), configPage2.exampleLookupValue);
-
+  // Example of 3D 16bit Table lookup
+  
+  Out_TS.Vars.Ve_i_example3DXLookup = configPage2.example3DXLookup; // this is for sending axes lookup constants back to TS which can only view output chanels as table axis lookup values. Normally you would just have the axis lookup variable in the output chanels.
+  Out_TS.Vars.Ve_i_example3DYLookup = configPage2.example3DYLookup;
+  Out_TS.Vars.dev3 = u16_table3DLookup_u16(configPage2.example3DTable_Xaxis, configPage2.example3DTable_Yaxis, (uint16_t *)configPage2.example3DTable_Zdata, 
+                                           sizeof(configPage2.example3DTable_Xaxis), sizeof(configPage2.example3DTable_Yaxis), 
+                                           configPage2.example3DXLookup, configPage2.example3DYLookup );
   USER_InputOutput();
     
 }  //END 100ms Task
