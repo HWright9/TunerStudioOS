@@ -175,6 +175,7 @@ typedef struct Out_TS_t
   uint16_t digitalPorts48_63_out;
   uint16_t Analog[16];    // 16bit analog value data array for local analog(0-15)
   
+  /* Examples below here, can be removed for your project */
   uint16_t dev1;          //developer use only
   uint16_t dev2;          //developer use only
   uint16_t dev3;          //developer use only
@@ -248,6 +249,8 @@ struct __attribute__ ( ( packed ) ) config2
 {
   uint16_t page2ActualSize;  //TS READ ONLY: to check page size in development. This should never exceed the defined page sizes.
   uint32_t page2CRC;         //TS READ ONLY: Future expansion EEPROM CRC for error checking.
+  
+  /* Examples below here, can be removed for your project */
   
   uint8_t exampleTable_Xaxis[8]; //8 byte axis points
   uint8_t exampleTable_Ydata[8]; //8 byte data

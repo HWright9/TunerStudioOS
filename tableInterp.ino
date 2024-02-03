@@ -129,6 +129,8 @@ uint8_t u_table3DLookup_u8(uint8_t *Xaxis, uint8_t *Yaxis, uint8_t *Zdata, uint8
   
   int32_t Xdiff, Ydiff, Zdiff, m;
   
+  if ((tableXSize < 2) || (tableYSize < 2)) { return Zdata[0]; } // error table size too small
+  
   //detect increasing or decreasing X axis
   if (Xaxis[1] >= Xaxis[0]) //increasing
   {
@@ -229,7 +231,7 @@ uint8_t u_table3DLookup_u8(uint8_t *Xaxis, uint8_t *Yaxis, uint8_t *Zdata, uint8
   // Out_TS.Vars.z3 = z3;
   // Out_TS.Vars.z4 = z4;
   
-  // First interpolation along x axis at j-1
+  // First interpolation along x axis at j
   if (lookupXVal < Xmax) // Check to make sure we are not off the end of the table.
   {
     m = lookupXVal - Xaxis[i-1];
@@ -237,7 +239,7 @@ uint8_t u_table3DLookup_u8(uint8_t *Xaxis, uint8_t *Yaxis, uint8_t *Zdata, uint8
     Zdiff = z2 - z1;
     Xinterp1 = uint8_t(z1 + (( m * Zdiff ) / Xdiff));  
     
-    // Second interpolation along x axis at j. Note m and Xdiff are the same as before.
+    // Second interpolation along x axis at j-1. Note m and Xdiff are the same as before.
     Zdiff = z4 - z3;
     Xinterp2 = uint8_t(z3 + (( m * Zdiff ) / Xdiff));
   }
@@ -247,7 +249,7 @@ uint8_t u_table3DLookup_u8(uint8_t *Xaxis, uint8_t *Yaxis, uint8_t *Zdata, uint8
     Xinterp2 = z4;
   }
   
-  // third interpolation between Xinterp 1 and 2 along yaxis, need to calculate Ydiff.
+  // third interpolation between Xinterp 1 and 2 along y axis, need to calculate Ydiff.
   if (lookupYVal < Ymax) // Check to make sure we are not off the end of the table.
   {
     m = lookupYVal - Yaxis[j-1];
