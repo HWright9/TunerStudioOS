@@ -240,7 +240,7 @@ void FUNC_100msTask(void)
   
   Out_TS.Vars.Ve_i_example3DXLookup = configPage2.example3DXLookup; // this is for sending axes lookup constants back to TS which can only view output chanels as table axis lookup values. Normally you would just have the axis lookup variable in the output chanels.
   Out_TS.Vars.Ve_i_example3DYLookup = configPage2.example3DYLookup;
-  Out_TS.Vars.dev3 = u16_table3DLookup_u16(configPage2.example3DTable_Xaxis, configPage2.example3DTable_Yaxis, (uint16_t *)configPage2.example3DTable_Zdata, 
+  Out_TS.Vars.dev3 = u_table3DLookup_u8(configPage2.example3DTable_Xaxis, configPage2.example3DTable_Yaxis, configPage2.example3DTable_Zdata, 
                                            sizeof(configPage2.example3DTable_Xaxis), sizeof(configPage2.example3DTable_Yaxis), 
                                            configPage2.example3DXLookup, configPage2.example3DYLookup );
   USER_InputOutput();

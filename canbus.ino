@@ -82,7 +82,7 @@ void Send_CAN0_message(byte bcChan, uint16_t theaddress, byte *thedata)
 {
 
   byte CANStat = CAN0.sendMsgBuf(theaddress, 0, 8, thedata);
-  Out_TS.Vars.dev1 = CANStat;    
+  //Out_TS.Vars.dev1 = CANStat;    
   if(CANStat == CAN_OK)
   {
     //Serial.println("Message Sent Successfully!");
