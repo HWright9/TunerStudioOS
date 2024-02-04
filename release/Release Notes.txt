@@ -1,6 +1,19 @@
 TunerStudio_OS_dev Release Notes
 
 
+Release v0.4
+04-February-2024
+Henry Wright.
+
+Added 3D table interpolation for u8 data type.
+
+Improved efficiency of 2D table interpolation. Removed reference to u16 table interpolation. This is not tested yet.
+
+Updated documentation.
+
+Development Direction:
+Adding other data types for table lookup.
+
 ----------------------------------------------------------------------------------------------------------
 Release v0.3
 18-July-2023
