@@ -121,7 +121,7 @@ uint8_t u8_table2DLookup_u8(uint8_t *Xaxis, uint8_t *Ydata, uint8_t tableSize, u
 * Xaxis must be either all increasing or all decreasing
 * Yaxis must be either all increasing or all decreasing
 * Zdata can be increasing and decreasing. */
-uint8_t u_table3DLookup_u8(uint8_t *Xaxis, uint8_t *Yaxis, uint8_t *Zdata, uint8_t tableXSize, uint8_t tableYSize, uint8_t lookupXVal, uint8_t lookupYVal )
+uint8_t u8_table3DLookup_u8(uint8_t *Xaxis, uint8_t *Yaxis, uint8_t *Zdata, uint8_t tableXSize, uint8_t tableYSize, uint8_t lookupXVal, uint8_t lookupYVal )
 {
   uint8_t returnVal;
   uint8_t i,j, Xmax, Ymax;
