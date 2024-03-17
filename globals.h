@@ -265,6 +265,9 @@ struct __attribute__ ( ( packed ) ) config2
   uint8_t example3DTable_Zdata[32]; // 8x4 bytes of data.
   uint8_t example3DXLookup; // lookup value for X axis of table
   uint8_t example3DYLookup; // lookup value for X axis of table
+  
+  uint16_t example2DTableu16_Xaxis[6]; //12 byte axis points
+  uint16_t example2DTableu16_Ydata[6]; //12 byte axis points
 
 //#if defined(CORE_AVR)
 };

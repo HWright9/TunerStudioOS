@@ -70,6 +70,54 @@ uint8_t u8_table2DLookup_u8(uint8_t *Xaxis, uint8_t *Ydata, uint8_t tableSize, u
  return returnVal;
 }
 
+/* Unsigned table lookup using all unsigned bytes (16bit) 
+* Xaxis must be either all increasing or all decreasing for this to work 
+* Ydata can be increasing and decreasing. */
+uint16_t u16_table2DLookup_u16(uint16_t *Xaxis, uint16_t *Ydata, uint16_t tableSize, uint16_t lookupVal )
+{
+  uint16_t returnVal;
+  uint8_t i;
+  int32_t temp, Xdiff, Ydiff, m;
+  
+  
+  if (tableSize < 2) { return Ydata[0]; } // error table size too small
+  
+  //detect increasing or decreasing X axis  
+  if (Xaxis[1] >= Xaxis[0]) // Increasing or same
+  {
+    // Short circuit for lookup off the ends of the X axis
+    if (lookupVal <= Xaxis[0]) { return Ydata[0]; }
+    if (lookupVal >= Xaxis[tableSize-1]) { return Ydata[tableSize-1]; }
+    
+    i = 1;
+    while (i < tableSize)
+    {
+      if (lookupVal < Xaxis[i]) { break; } // We have found that LookupVal is between this axis point @ i and the point before it.
+      else { i++; }
+    }
+  }
+  else //decreasing X axis
+  {
+    // Short circuit for lookup off the end of the table
+    if (lookupVal >= Xaxis[0]) { return Ydata[0]; }
+    if (lookupVal <= Xaxis[tableSize-1]) { return Ydata[tableSize-1]; }
+    
+    i = 1;
+    while (i < tableSize) 
+    {
+      if (lookupVal > Xaxis[i]) { break; }
+      else { i++; } // We have found that LookupVal is between this axis point @ i and the point before it.
+    }
+  }
+
+  m = lookupVal - Xaxis[i-1];
+  Xdiff = Xaxis[i] - Xaxis[i-1];
+  Ydiff = Ydata[i] - Ydata[i-1];
+  returnVal = uint16_t(Ydata[i-1] + (( m * Ydiff ) / Xdiff));
+  
+ return returnVal;
+}
+
 /* Unsigned 3D table lookup using all unsigned bytes (8bit)
 * Xaxis must be either all increasing or all decreasing
 * Yaxis must be either all increasing or all decreasing
