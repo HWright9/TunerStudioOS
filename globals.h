@@ -55,8 +55,8 @@
 #endif 
 
 // global true/false statements
-#define LOW                                0
-#define HIGH                               1
+//#define LOW                                0
+//#define HIGH                               1
 
 #define false                              0
 #define true                               1
@@ -158,7 +158,7 @@ uint8_t currentPage = 0; // TS controlled page for reading and writing EEPROM.
 * The total size of this variable is captured in ochBlockSizeSent which can be read in Tuner Studio on page 1.
 * Its highly reccomended to keep the variable names the same between the .ini file and this code.
 */
-typedef struct Out_TS_t
+struct Out_TS_t
 {
   uint8_t secl; // counter of seconds 0-255 looping, required for TS comms.
   uint8_t systembits; //system status bits
@@ -194,7 +194,7 @@ typedef struct Out_TS_t
 };
 
 // this union of structures is to make it easier to transmit multiple data types via serial
-typedef union Out_TS_Pac_t
+union Out_TS_Pac_t
 {
   Out_TS_t Vars;
   byte byteData[sizeof(Out_TS_t)];
@@ -202,7 +202,7 @@ typedef union Out_TS_Pac_t
 Out_TS_Pac_t Out_TS;
 
 
-typedef struct digitalPorts_t
+struct digitalPorts_t
 {
   uint16_t value;
   uint16_t isOverride;
@@ -268,6 +268,7 @@ struct __attribute__ ( ( packed ) ) config2
   
   uint16_t example2DTableu16_Xaxis[6]; //12 byte axis points
   uint16_t example2DTableu16_Ydata[6]; //12 byte axis points
+  uint16_t exampleu16LookupValue; // lookup value for word table
 
 //#if defined(CORE_AVR)
 };

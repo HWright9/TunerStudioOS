@@ -10,4 +10,4 @@ void USER_blinkCEL(void);
 void USER_InputOutput(void);
 
 
-#endif USERFUNC_H
+#endif //USERFUNC_H
