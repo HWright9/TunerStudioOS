@@ -35,7 +35,7 @@ uint8_t u8_table2DLookup_u8(uint8_t *Xaxis, uint8_t *Ydata, uint8_t tableSize, u
   if (tableSize < 2) { return Ydata[0]; } // error table size too small
   
   //detect increasing or decreasing X axis  
-  if (Xaxis[1] >= Xaxis[0]) // Increasing or same
+  if (Xaxis[tableSize-1] >= Xaxis[0]) // Increasing or same
   {
     // Short circuit for lookup off the ends of the X axis
     if (lookupVal <= Xaxis[0]) { return Ydata[0]; }
@@ -79,11 +79,12 @@ uint16_t u16_table2DLookup_u16(uint16_t *Xaxis, uint16_t *Ydata, uint16_t tableS
   uint8_t i;
   int32_t temp, Xdiff, Ydiff, m;
   
+  tableSize = tableSize / sizeof(tableSize); // tableSize is byte count, but we need a count of array elements.
   
   if (tableSize < 2) { return Ydata[0]; } // error table size too small
   
   //detect increasing or decreasing X axis  
-  if (Xaxis[1] >= Xaxis[0]) // Increasing or same
+  if (Xaxis[tableSize-1] >= Xaxis[0]) // Increasing or same
   {
     // Short circuit for lookup off the ends of the X axis
     if (lookupVal <= Xaxis[0]) { return Ydata[0]; }
@@ -133,7 +134,7 @@ uint8_t u8_table3DLookup_u8(uint8_t *Xaxis, uint8_t *Yaxis, uint8_t *Zdata, uint
   if ((tableXSize < 2) || (tableYSize < 2)) { return Zdata[0]; } // error table size too small
   
   //detect increasing or decreasing X axis
-  if (Xaxis[1] >= Xaxis[0]) //increasing
+  if (Xaxis[tableXSize-1] >= Xaxis[0]) //increasing
   {
     Xmax = Xaxis[tableXSize-1];
     // Short circuit for lookup off the ends of the table
@@ -167,7 +168,7 @@ uint8_t u8_table3DLookup_u8(uint8_t *Xaxis, uint8_t *Yaxis, uint8_t *Zdata, uint
   }
 
   //detect increasing or decreasing Y axis
-  if (Yaxis[1] >= Yaxis[0]) // increasing
+  if (Yaxis[tableYSize-1] >= Yaxis[0]) // increasing
   {
     Ymax = Yaxis[tableYSize-1];
     // Short circuit for lookup off the end of the table
