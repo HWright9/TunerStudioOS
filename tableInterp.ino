@@ -76,8 +76,8 @@ uint8_t u8_table2DLookup_u8(uint8_t *Xaxis, uint8_t *Ydata, uint8_t tableSize, u
 uint16_t u16_table2DLookup_u16(uint16_t *Xaxis, uint16_t *Ydata, uint16_t tableSize, uint16_t lookupVal )
 {
   uint16_t returnVal;
-  uint8_t i;
-  int32_t temp, Xdiff, Ydiff, m;
+  uint8_t i, sign;
+  uint32_t temp, Xdiff, Ydiff, m;
   
   tableSize = tableSize / sizeof(tableSize); // tableSize is byte count, but we need a count of array elements.
   
@@ -110,11 +110,30 @@ uint16_t u16_table2DLookup_u16(uint16_t *Xaxis, uint16_t *Ydata, uint16_t tableS
       else { i++; } // We have found that LookupVal is between this axis point @ i and the point before it.
     }
   }
-
-  m = lookupVal - Xaxis[i-1];
-  Xdiff = Xaxis[i] - Xaxis[i-1];
-  Ydiff = Ydata[i] - Ydata[i-1];
-  returnVal = uint16_t(Ydata[i-1] + (( m * Ydiff ) / Xdiff));
+  
+  sign = 0;
+  // Due to multiplication and division we need the full 32bit unsigned integer. AVR does not support 64bit variables so need to use unsigned math with a seperate sign signal.
+  if(lookupVal < Xaxis[i-1]) { m = Xaxis[i-1] - lookupVal; BIT_CLEAR(sign,0); } // Negative 3 -
+  else { m = lookupVal - Xaxis[i-1]; BIT_SET(sign,0); } // Positive
+  
+  if(Xaxis[i] < Xaxis[i-1]) { Xdiff = Xaxis[i-1] - Xaxis[i]; BIT_TOGGLE(sign,0);} // Invert sign if negative 4 +
+  else { Xdiff = Xaxis[i] - Xaxis[i-1];} // Positive
+  
+  if(Ydata[i] < Ydata[i-1]) { Ydiff = Ydata[i-1] - Ydata[i]; BIT_TOGGLE(sign,0); } // Invert sign if negative
+  else { Ydiff = Ydata[i] - Ydata[i-1]; } // Positive 73 +
+  
+  if (BIT_CHECK(sign,0) == true) // Positive
+  {
+	  returnVal = uint16_t((uint32_t)Ydata[i-1] + (( m * Ydiff ) / Xdiff)); // 127+54 = 181
+  }
+  else
+  {
+	  returnVal = uint16_t((uint32_t)Ydata[i-1] - (( m * Ydiff ) / Xdiff));
+  }
+  
+  Out_TS.Vars.z1 = m;
+  Out_TS.Vars.z2 = Xdiff;
+  Out_TS.Vars.z3 = Ydiff;
   
  return returnVal;
 }
