@@ -237,6 +237,7 @@ void FUNC_100msTask(void)
   // Example of 2d 8bit Table lookup
   Out_TS.Vars.dev4 = u8_table2DLookup_u8(configPage2.exampleTable_Xaxis, configPage2.exampleTable_Ydata, sizeof(configPage2.exampleTable_Xaxis), configPage2.exampleLookupValue);
   // Example of 3D 16bit Table lookup
+  Out_TS.Vars.dev1 = u16_table2DLookup_u16(configPage2.example2DTableu16_Xaxis, configPage2.example2DTableu16_Ydata, sizeof(configPage2.example2DTableu16_Xaxis), configPage2.exampleu16LookupValue);
   
   Out_TS.Vars.Ve_i_example3DXLookup = configPage2.example3DXLookup; // this is for sending axes lookup constants back to TS which can only view output chanels as table axis lookup values. Normally you would just have the axis lookup variable in the output chanels.
   Out_TS.Vars.Ve_i_example3DYLookup = configPage2.example3DYLookup;

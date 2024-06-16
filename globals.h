@@ -55,8 +55,8 @@
 #endif 
 
 // global true/false statements
-#define LOW                                0
-#define HIGH                               1
+//#define LOW                                0
+//#define HIGH                               1
 
 #define false                              0
 #define true                               1
@@ -83,42 +83,17 @@
 #define BIT_CANSTATUS_CAN0RXMSGERR          6  //can0 Recieve error (timeout or other)
 #define BIT_CANSTATUS_CAN1RXMSGERR          7  //can1 Recieve error (timeout or other)
 
-
 //Define bitmask for testoutputs
 #define BIT_TESTHW_ACTIVE                   1  // testactive flag
 
-//define bitmasks for remote output status
-#define REMOTE_OUT_OFF                      0
-#define REMOTE_OUT_ON                       1
-#define REMOTE_OUT_OPENCIRCUIT              2
-#define REMOTE_OUT_SHORTCIRCUIT             3
-#define REMOTE_OUT_THERMALOVERLOAD          4
-#define REMOTE_OUT_CURRENTOVERLOAD          5
-#define REMOTE_OUT_unused6                  6
-#define REMOTE_OUT_unused7                  7
-
-//define bitmasks for remote input status
-#define REMOTE_IN_OFF                      0
-#define REMOTE_IN_ON                       1
-#define REMOTE_IN_OPENCIRCUIT              2
-#define REMOTE_IN_SHORTCIRCUIT             3
-#define REMOTE_IN_THERMALOVERLOAD          4
-#define REMOTE_IN_CURRENTOVERLOAD          5
-#define REMOTE_IN_unused6                  6
-#define REMOTE_IN_unused7                  7
-
-#define addressoffset     0x100
-
-#define TACHO_PULSE_HIGH() *tach_pin_port |= (tach_pin_mask)
-#define TACHO_PULSE_LOW() *tach_pin_port &= ~(tach_pin_mask)
-#define TACHO_PULSE_TOGGLE() *tach_pin_port = *tach_pin_port^tach_pin_mask // Toggle Tacho
-
 //Handy bitsetting macros
-#define BIT_SET(a,b)        ((a) |= (1<<(b)))
-#define BIT_CLEAR(a,b)      ((a) &= ~(1<<(b)))
-#define BIT_WRITE(a,b,c)    (bitWrite(a,b,c))
+#define BIT_SET(a,pos)        ((a) |= (1<<(pos)))     //set bit in variable (a) at position (pos)
+#define BIT_CLEAR(a,pos)      ((a) &= ~(1<<(pos)))    //clear bit in variable (a) at position (pos)
+#define BIT_WRITE(a,b,c)    (bitWrite(a,pos,b))     //write bit in variable (a) at position (pos) with value (b)
+#define BIT_TOGGLE(a,pos)    ((a) = (a)^(pos)) //Toggle (flip) bit in variable (a) at position (pos)
 #define BIT_CHECK(var,pos)  ((var) & (1<<(pos)))               //gives and answer of the decimal value of the binary position being tested if was 1.
 #define BIT_sCHECK(var,pos) (((var) & (1<<(pos)))>>pos)       // gives a 1 or 0 answer according to if the bit at pos was 1 or 0
+
 
 #define BIT_TIMER_1000MS        0
 #define BIT_TIMER_500MS         1
@@ -158,7 +133,7 @@ uint8_t currentPage = 0; // TS controlled page for reading and writing EEPROM.
 * The total size of this variable is captured in ochBlockSizeSent which can be read in Tuner Studio on page 1.
 * Its highly reccomended to keep the variable names the same between the .ini file and this code.
 */
-typedef struct Out_TS_t
+struct Out_TS_t
 {
   uint8_t secl; // counter of seconds 0-255 looping, required for TS comms.
   uint8_t systembits; //system status bits
@@ -185,16 +160,16 @@ typedef struct Out_TS_t
   float Ve_Eqr_Sensor1;
   uint16_t Ve_i_example3DXLookup;  // example variables for tracking table axes points in TS.
   uint16_t Ve_i_example3DYLookup;  // example variables for tracking table axes points in TS.
-  uint16_t z1;          //developer use only
-  uint16_t z2;          //developer use only
-  uint16_t z3;          //developer use only
-  uint16_t z4;          //developer use only
+  uint32_t z1;          //developer use only
+  uint32_t z2;          //developer use only
+  uint32_t z3;          //developer use only
+  uint32_t z4;          //developer use only
   uint16_t Xinterp1;          //developer use only
   uint16_t Xinterp2;          //developer use only
 };
 
 // this union of structures is to make it easier to transmit multiple data types via serial
-typedef union Out_TS_Pac_t
+union Out_TS_Pac_t
 {
   Out_TS_t Vars;
   byte byteData[sizeof(Out_TS_t)];
@@ -202,7 +177,7 @@ typedef union Out_TS_Pac_t
 Out_TS_Pac_t Out_TS;
 
 
-typedef struct digitalPorts_t
+struct digitalPorts_t
 {
   uint16_t value;
   uint16_t isOverride;
@@ -265,6 +240,10 @@ struct __attribute__ ( ( packed ) ) config2
   uint8_t example3DTable_Zdata[32]; // 8x4 bytes of data.
   uint8_t example3DXLookup; // lookup value for X axis of table
   uint8_t example3DYLookup; // lookup value for X axis of table
+  
+  uint16_t example2DTableu16_Xaxis[6]; //12 byte axis points
+  uint16_t example2DTableu16_Ydata[6]; //12 byte axis points
+  uint16_t exampleu16LookupValue; // lookup value for word table
 
 //#if defined(CORE_AVR)
 };

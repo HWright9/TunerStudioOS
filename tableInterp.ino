@@ -35,7 +35,7 @@ uint8_t u8_table2DLookup_u8(uint8_t *Xaxis, uint8_t *Ydata, uint8_t tableSize, u
   if (tableSize < 2) { return Ydata[0]; } // error table size too small
   
   //detect increasing or decreasing X axis  
-  if (Xaxis[1] >= Xaxis[0]) // Increasing or same
+  if (Xaxis[tableSize-1] >= Xaxis[0]) // Increasing or same
   {
     // Short circuit for lookup off the ends of the X axis
     if (lookupVal <= Xaxis[0]) { return Ydata[0]; }
@@ -70,6 +70,74 @@ uint8_t u8_table2DLookup_u8(uint8_t *Xaxis, uint8_t *Ydata, uint8_t tableSize, u
  return returnVal;
 }
 
+/* Unsigned table lookup using all unsigned bytes (16bit) 
+* Xaxis must be either all increasing or all decreasing for this to work 
+* Ydata can be increasing and decreasing. */
+uint16_t u16_table2DLookup_u16(uint16_t *Xaxis, uint16_t *Ydata, uint16_t tableSize, uint16_t lookupVal )
+{
+  uint16_t returnVal;
+  uint8_t i, sign;
+  uint32_t temp, Xdiff, Ydiff, m;
+  
+  tableSize = tableSize / sizeof(tableSize); // tableSize is byte count, but we need a count of array elements.
+  
+  if (tableSize < 2) { return Ydata[0]; } // error table size too small
+  
+  //detect increasing or decreasing X axis  
+  if (Xaxis[tableSize-1] >= Xaxis[0]) // Increasing or same
+  {
+    // Short circuit for lookup off the ends of the X axis
+    if (lookupVal <= Xaxis[0]) { return Ydata[0]; }
+    if (lookupVal >= Xaxis[tableSize-1]) { return Ydata[tableSize-1]; }
+    
+    i = 1;
+    while (i < tableSize)
+    {
+      if (lookupVal < Xaxis[i]) { break; } // We have found that LookupVal is between this axis point @ i and the point before it.
+      else { i++; }
+    }
+  }
+  else //decreasing X axis
+  {
+    // Short circuit for lookup off the end of the table
+    if (lookupVal >= Xaxis[0]) { return Ydata[0]; }
+    if (lookupVal <= Xaxis[tableSize-1]) { return Ydata[tableSize-1]; }
+    
+    i = 1;
+    while (i < tableSize) 
+    {
+      if (lookupVal > Xaxis[i]) { break; }
+      else { i++; } // We have found that LookupVal is between this axis point @ i and the point before it.
+    }
+  }
+  
+  sign = 0;
+  // Due to multiplication and division we need the full 32bit unsigned integer. AVR does not support 64bit variables so need to use unsigned math with a seperate sign signal.
+  if(lookupVal < Xaxis[i-1]) { m = Xaxis[i-1] - lookupVal; BIT_CLEAR(sign,0); } // Negative 3 -
+  else { m = lookupVal - Xaxis[i-1]; BIT_SET(sign,0); } // Positive
+  
+  if(Xaxis[i] < Xaxis[i-1]) { Xdiff = Xaxis[i-1] - Xaxis[i]; BIT_TOGGLE(sign,0);} // Invert sign if negative 4 +
+  else { Xdiff = Xaxis[i] - Xaxis[i-1];} // Positive
+  
+  if(Ydata[i] < Ydata[i-1]) { Ydiff = Ydata[i-1] - Ydata[i]; BIT_TOGGLE(sign,0); } // Invert sign if negative
+  else { Ydiff = Ydata[i] - Ydata[i-1]; } // Positive 73 +
+  
+  if (BIT_CHECK(sign,0) == true) // Positive
+  {
+	  returnVal = uint16_t((uint32_t)Ydata[i-1] + (( m * Ydiff ) / Xdiff)); // 127+54 = 181
+  }
+  else
+  {
+	  returnVal = uint16_t((uint32_t)Ydata[i-1] - (( m * Ydiff ) / Xdiff));
+  }
+  
+  Out_TS.Vars.z1 = m;
+  Out_TS.Vars.z2 = Xdiff;
+  Out_TS.Vars.z3 = Ydiff;
+  
+ return returnVal;
+}
+
 /* Unsigned 3D table lookup using all unsigned bytes (8bit)
 * Xaxis must be either all increasing or all decreasing
 * Yaxis must be either all increasing or all decreasing
@@ -85,7 +153,7 @@ uint8_t u8_table3DLookup_u8(uint8_t *Xaxis, uint8_t *Yaxis, uint8_t *Zdata, uint
   if ((tableXSize < 2) || (tableYSize < 2)) { return Zdata[0]; } // error table size too small
   
   //detect increasing or decreasing X axis
-  if (Xaxis[1] >= Xaxis[0]) //increasing
+  if (Xaxis[tableXSize-1] >= Xaxis[0]) //increasing
   {
     Xmax = Xaxis[tableXSize-1];
     // Short circuit for lookup off the ends of the table
@@ -119,7 +187,7 @@ uint8_t u8_table3DLookup_u8(uint8_t *Xaxis, uint8_t *Yaxis, uint8_t *Zdata, uint
   }
 
   //detect increasing or decreasing Y axis
-  if (Yaxis[1] >= Yaxis[0]) // increasing
+  if (Yaxis[tableYSize-1] >= Yaxis[0]) // increasing
   {
     Ymax = Yaxis[tableYSize-1];
     // Short circuit for lookup off the end of the table

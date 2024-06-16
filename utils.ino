@@ -157,3 +157,12 @@ uint16_t lowPassFilter_u16(uint32_t input, uint8_t alpha, uint32_t prior)
   // else result = input. and nothing to do.
   return result;
 }
+
+
+/**
+ * @brief Toggles a bit
+ * 
+ * @param input The input value to be used to update the previous value.
+ * @param alpha The filter value. 128 would be a 50% per loop filter. Valid range 0-255
+ * @param prior The previous value.
+ */
