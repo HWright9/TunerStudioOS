@@ -10,6 +10,7 @@
 
 void INIT_ADC(void);
 void INIT_setPinMapping(void);
+void INIT_pinDefaults(void);
 uint16_t readAnalog(uint8_t AinCH);
 uint8_t readDigitalPort(uint8_t Dpin);
 uint8_t setDigitalPort(uint8_t Dpin, uint8_t value, uint8_t setOverride);

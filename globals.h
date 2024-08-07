@@ -108,6 +108,50 @@
 #define CANRX_MOTECPLM_DFLT    0 // bit 0 is motec PLM.
 #define CANRX_UNDEFINEDMSG_DFLT      1 // next message and so on...
 
+//Hardcoded Controller Pin Declarations
+#define Df_i_OrangeLEDPin 65 // Orange Park Brake Sys Fault LED
+#define Df_i_RedLEDPin 64 // Red Park Brake Warning LED
+#define Df_i_SeatbeltLEDPin 66 // Seatbelt Warning LED
+#define Df_i_RevBoxFWDPin 67 // Signal that the reverse box is in forwards
+
+#define Df_i_VoltageInputPin 56 // VoltageSense input (0-5V analogue A2)
+#define Df_i_ActuatorPosPin 61 // Actuator Position (0-5V analogue A7)
+#define Df_i_AccelPedalPin 59 // TPS sensor from LMC6482 Op amp in voltage follower (0-5V analogue A5)
+#define Df_i_SpareADCPinA3 57 //spare ADC Yellow 0-5V used for AF Ratio
+#define Df_i_SpareADCPinA4 58 //spare ADC Blue 0-5V used for AF Ratio
+
+#define Df_i_M1NAPin 2 // Direction Input for Driver 1
+#define Df_i_M1NBPin 4 // Direction Input for Driver 1
+#define Df_i_M1PWMPin 9 // PWM for Driver 1
+#define Df_i_M1EN_M1DiagPin 6 // Motor Driver Enable Pin must be pulled high. If low means fault and if pulled low disables motor driver.
+#define Df_i_M1CSPin 54 // Current sense for motor driver 1. (0-5V Analogue A0)
+
+#define Df_i_M2NAPin 7 // Direction Input for Driver 2
+#define Df_i_M2NBPin 8 // Direction Input for Driver 2
+#define Df_i_M2PWMPin 10 // PWM for Driver 2
+#define Df_i_M2EN_M2DiagPin 12 // Motor Driver Enable Pin must be pulled high. If low means fault and if pulled low disables motor driver.
+#define Df_i_M2CSPin 55 // Current sense for motor driver 2. (0-5V Analogue A1)
+
+#define Df_i_CruiseSolenoidPin 11 //Cruise control mecanical fail safe solenoid. PWM pin 11. - Not currently used in logic
+
+#define Df_i_PowerControlPin 3 // Pin high power on for arduino.
+#define Df_i_SpeedometerPin 19 // Speedometer input (int4)
+#define Df_i_TachometerPin 18 // Tachometer input (int5)
+
+#define Df_i_12VBoard5VPin 48 // 5V supply reference to 12V-5V input conversion board
+#define Df_i_12VBoardGndPin 30 // Ground reference to 12V-5V input conversion board
+#define Df_i_SwApplyPin 46 // Apply Switch input
+#define Df_i_SwReleasePin 44 // Release Switch input
+#define Df_i_IgnitionPin 43 // Ignition Switch digital input - Was 42 but died on the Mega.
+#define Df_i_ClutchTopPin 41 // Clutch top of travel digital input - Was 40 but protection resistor added
+#define Df_i_BrakeApplyPin 39 // Brake information - Was 38 but protection resistor added
+#define Df_i_RevBoxReversePin 37 // Reverse Engaged information from reverse box - was 36 but died on the Mega
+#define Df_i_MainBoxNeutralPin 34 // Main gearbox is in neutral (pulls to 0V)
+#define Df_i_LightsOnPin 33 // Park lights are on Was 32 but protection resistor added.
+
+#define Df_i_MF_GreenSW_Pin 26 // Multifunction Green Switch (LHS)
+#define Df_i_MF_RedSW_Pin 28 // Multifunction Red Switch (RHS)
+
 /* Global Variables Outside status */
 uint8_t tsCanId = 0;          // this is the tunerstudio canID for the device you are requesting data from , this is 0 for the main ecu in the system which is usually the speeduino ecu . 
                               // this value is set in Tunerstudio when configuring your Speeduino

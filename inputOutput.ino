@@ -42,12 +42,103 @@ void INIT_setPinMapping(void)
   digitalPorts32_47.isOutput = 0;
   digitalPorts48_63.isOutput = 0;
   
-  //set pins
+  //system pins
   setPortMode(LED_BUILTIN, OUTPUT);  
   if (configPage1.can0RXIntPin > DPIN_DISABLED) { Pin_can0RXInt = pinTranslate(configPage1.can0RXIntPin); setPortMode(Pin_can0RXInt,INPUT_PULLUP); }
+  //if (configPage1.analogSelectorEn == APIN_ENABLED) { Pin_analogSelector = configPage1.analogSelectorPin; }
   
-  if (configPage1.analogSelectorEn == APIN_ENABLED) { Pin_analogSelector = configPage1.analogSelectorPin; }
+  /* from Setup for EPB */
+  // initialize pins
+  setPortMode(Df_i_OrangeLEDPin, OUTPUT);
+  setPortMode(Df_i_RedLEDPin, OUTPUT);
+  setPortMode(Df_i_SeatbeltLEDPin, OUTPUT);
+    
+  //analogue pins
+  pinMode(Df_i_AccelPedalPin, INPUT); 
+  pinMode(Df_i_VoltageInputPin, INPUT); 
+  pinMode(Df_i_ActuatorPosPin, INPUT); 
   
+  //Motor Driver output 1
+  setPortMode(Df_i_M1NAPin, OUTPUT);
+  setPortMode(Df_i_M1NBPin, OUTPUT);
+  setPortMode(Df_i_M1PWMPin, OUTPUT);
+  setPortMode(Df_i_M1EN_M1DiagPin, INPUT); //input writing to this enables or disables internal pullup
+  setPortMode(Df_i_M1CSPin, INPUT);
+
+  //Motor Driver output 2
+  setPortMode(Df_i_M2NAPin, OUTPUT);
+  setPortMode(Df_i_M2NBPin, OUTPUT);
+  setPortMode(Df_i_M2PWMPin, OUTPUT);
+  setPortMode(Df_i_M2EN_M1DiagPin, INPUT); //input writing to this enables or disables internal pullup
+  setPortMode(Df_i_M2CSPin, INPUT);
+  
+  //Cruise control 
+  setPortMode(Df_i_CruiseSolenoidPin, OUTPUT);
+  
+  // Relay Power to controller
+  setPortMode(Df_i_PowerControlPin, OUTPUT);
+
+  // Speed inputs
+  setPortMode(Df_i_SpeedometerPin, INPUT);
+  setPortMode(Df_i_TachometerPin, INPUT);
+  
+  // 12v to 5V conversion board power and ground
+  setPortMode(Df_i_12VBoard5VPin, OUTPUT);
+  setPortMode(Df_i_12VBoardGndPin, OUTPUT);
+  
+  // Digital inputs from various systems
+  setPortMode(Df_i_IgnitionPin, INPUT);
+  setPortMode(Df_i_ClutchTopPin, INPUT);
+  setPortMode(Df_i_BrakeApplyPin, INPUT);
+  setPortMode(Df_i_LightsOnPin, INPUT);
+  
+  //Reversing gearbox inputs
+  setPortMode(Df_i_RevBoxFWDPin, INPUT_PULLUP);
+  setPortMode(Df_i_RevBoxReversePin, INPUT);
+  setPortMode(Df_i_MainBoxNeutralPin, INPUT);
+  
+  // Dashboard Switch Inputs
+  setPortMode(Df_i_SwApplyPin, INPUT);
+  setPortMode(Df_i_SwReleasePin, INPUT);
+  setPortMode(Df_i_MF_GreenSW_Pin, INPUT);
+  setPortMode(Df_i_MF_RedSW_Pin, INPUT);
+  
+  //Attach interrupts:
+  attachInterrupt(5, Tacho_ISR, FALLING); //attach interrupt to int5 (tacho input)
+  attachInterrupt(4, Speedo_ISR, CHANGE); //attach interrupt to int4 (speedo input)
+  interrupts();  //enable interrupts //noInterrupts ();
+  
+}
+
+/* Pin default positions */
+void INIT_pinDefaults(void);
+{
+  // Provide power and ground to 12V-5V input board
+  setDigitalPort(Df_i_12VBoard5VPin, HIGH, false);
+  setDigitalPort(Df_i_12VBoardGndPin, LOW, false);
+  
+  //switch power control to battery power
+  setDigitalPort(Df_i_PowerControlPin, HIGH, false); //high is on
+  
+  //Init the motor drivers, these pins double as enable and diag ports and are both inputs and outputs.
+  setDigitalPort(Df_i_M2EN_M1DiagPin, HIGH, false);
+  setDigitalPort(Df_i_M2EN_M2DiagPin, HIGH, false);
+  
+  //Default LED conditions are on to perform bulb test
+  setDigitalPort(Df_i_RedLEDPin, LOW, false); //low is on
+  setDigitalPort(Df_i_OrangeLEDPin, LOW, false); //low is on
+  setDigitalPort(Df_i_SeatbeltLEDPin, LOW, false); //low is on  
+  
+  //init motor control 1
+  setDigitalPort(Df_i_M1NAPin, LOW, false);
+  setDigitalPort(Df_i_M1NBPin, LOW, false);
+    
+  //init motor control 2
+  setDigitalPort(Df_i_M2NAPin, LOW, false);
+  setDigitalPort(Df_i_M2NBPin, LOW, false);
+
+  // init Cruise
+  setDigitalPort(Df_i_CruiseSolenoidPin, LOW, false);
 }
 
 uint16_t readAnalog(uint8_t AinCH)

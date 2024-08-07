@@ -1,8 +1,8 @@
 #ifndef CANBUS_H
 #define CANBUS_H
 
+#include <SPI.h>
 #include <mcp_can.h>          //see canbus.h for all canbus config
-#include <SPI.h> 
 
 /*--------------- canbus config options -------------- */
 /* CAN 0 */

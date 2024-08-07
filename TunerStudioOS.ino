@@ -26,6 +26,8 @@
 #include "canbus.h"
 #include "tableInterp.h"
 #include "userfunctions.h"
+#include "accelgyro.h"
+
 
 MCP_CAN CAN0(CAN0_CS);      // Set MCP_CAN CAN0 instance CS to pin 11
 
@@ -50,10 +52,14 @@ void setup() {
   
   Out_TS.Vars.systembits = 0; // clear all system bits.
   STOR_loadConfig();            
-  INIT_setPinMapping();
+  INIT_setPinMapping(); //define inputs and outputs
+  INIT_pinDefaults(); // Set input output pins to starting position.
   INIT_ADC();
+  Wire.begin();  // 2 wire interface init
   INIT_can0();     //init can interface 0 
   INIT_readOnlyVars();
+  INIT_gyro();
+  INIT_8x8Matrix();
 
   TS_SERIALLink.begin(115200);
 #if defined(AUX_SERIAL_ENBL)
