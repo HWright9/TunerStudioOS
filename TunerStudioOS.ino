@@ -27,6 +27,7 @@
 #include "tableInterp.h"
 #include "userfunctions.h"
 #include "accelgyro.h"
+#include "display.h"
 
 
 MCP_CAN CAN0(CAN0_CS);      // Set MCP_CAN CAN0 instance CS to pin 11

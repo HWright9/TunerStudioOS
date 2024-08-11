@@ -132,9 +132,9 @@
 #define Df_i_M2EN_M2DiagPin 12 // Motor Driver Enable Pin must be pulled high. If low means fault and if pulled low disables motor driver.
 #define Df_i_M2CSPin 55 // Current sense for motor driver 2. (0-5V Analogue A1)
 
-#define Df_i_CruiseSolenoidPin 11 //Cruise control mecanical fail safe solenoid. PWM pin 11. - Not currently used in logic
+#define Df_i_CruiseSolenoidPin 11 //Cruise control mechanical fail safe solenoid. PWM pin 11. - Not currently used in logic wired to header at top RHS of board
 
-#define Df_i_PowerControlPin 3 // Pin high power on for arduino.
+#define Df_i_PowerControlPin 5 // Pin high power on for arduino. (was 3 in old code)
 #define Df_i_SpeedometerPin 19 // Speedometer input (int4)
 #define Df_i_TachometerPin 18 // Tachometer input (int5)
 
@@ -151,6 +151,32 @@
 
 #define Df_i_MF_GreenSW_Pin 26 // Multifunction Green Switch (LHS)
 #define Df_i_MF_RedSW_Pin 28 // Multifunction Red Switch (RHS)
+
+
+/* Typedefs*/
+
+typedef enum
+{
+ e_MeasGear_None = 0,
+ e_MeasGear_1st = 1,
+ e_MeasGear_2nd = 2,
+ e_MeasGear_3rd = 3,
+ e_MeasGear_4th = 4,
+ e_MeasGear_5th = 5,
+ e_MeasGear_Neut = 6
+} T_e_MeasGears;
+
+//T_e_MeasGears MyTempGear = e_MeasGear_None;
+
+//Led blinking
+typedef enum
+{
+  e_LED_Off = 0,
+  e_LED_On = 1,
+  e_LED_Blink = 2
+} T_e_LED_State;
+
+
 
 /* Global Variables Outside status */
 uint8_t tsCanId = 0;          // this is the tunerstudio canID for the device you are requesting data from , this is 0 for the main ecu in the system which is usually the speeduino ecu . 
@@ -170,6 +196,10 @@ const uint16_t page_5_size = 512;
 #endif
 
 uint8_t currentPage = 0; // TS controlled page for reading and writing EEPROM.
+
+/*EPB Specific */
+T_e_LED_State Ve_e_RedLedState = e_LED_Off;
+T_e_LED_State Ve_e_OrangeLedState = e_LED_Off;
 
 /* The global serial transmit status object.
 * All variables in this list will be transmitted to Tuner Studio in the order presented here.
