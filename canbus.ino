@@ -39,6 +39,7 @@ void CAN0_maintenance(void)
     
     else if ((bitRead(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0FAILED) == true)) // CAN bus failed to send many messages, Attempt re-init.
     {
+      CAN0.abortTX(); //try this
       byte canmsg[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
       Send_CAN0_message(0, 0x799, canmsg);
     }
@@ -50,6 +51,7 @@ void INIT_can0(void)
 {
   if (configPage1.can0Enable == true)
   {
+    CAN0.abortTX(); //flush transmit buffer
     byte CANStat = CAN0.begin(MCP_ANY, (uint32_t)configPage1.can0Baud, (uint8_t)configPage1.can0XTalFreq); // init can bus : baudrate = CAN_1000KBPS, frequency MCP_8MHZ
     
     if(CANStat == CAN_OK)  
@@ -94,7 +96,7 @@ void Send_CAN0_message(byte bcChan, uint16_t theaddress, byte *thedata)
   {
     //Serial.println("Error Sending Message...");
     BIT_SET(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0MSGFAIL);
-    if (can0_Msg_FailCntr < 255) { can0_Msg_FailCntr++; }
+    if (can0_Msg_FailCntr < 254) { can0_Msg_FailCntr++; }
   }  
 
   if (can0_Msg_FailCntr > 50)
