@@ -17,18 +17,6 @@ uint8_t senddata[8] = {0x00, 0x00, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
 
 uint8_t canRx_MotecPLM_O2_tmr = 0;
 
-void CAN0_INT_routine(void)
-{ 
-  #if OBD_CANPORT == 0
-        #if OBD_ACTIVE == 1
-            //obd_command(0);
-        #else
-            receive_CAN0_message();
-        #endif
-  #else
-    receive_CAN0_message();     
-  #endif    
-}
 
 // CAN bus maintenance, call this at a slow rate to recover cleanly from disconnections and enable/disable CAN
 void CAN0_maintenance(void)
@@ -106,22 +94,35 @@ void Send_CAN0_message(byte bcChan, uint16_t theaddress, byte *thedata)
 //---------------------------------------------------------------------------------------------
 
 void receive_CAN0_message()
-  {
-    CAN0.readMsgBuf(&rxId, &len, rxBuf);      // Read data: len = data length, buf = data byte(s)
-         
-    if((rxId & 0x80000000) == 0x80000000)     // Determine if ID is standard (11 bits) or extended (29 bits)
+ 
+  uint8_t canErr = CAN_OK;
+  
+  while((digitalRead(Pin_can0RXInt) == LOW) && (CAN0.checkReceive() == CAN_MSGAVAIL)) // Digital read CAN INT pin is low
+  { 
+    canErr = CAN0.readMsgBuf(&rxId, &len, rxBuf);      // Read data: len = data length, buf = data byte(s)
+
+    if ((canErr == CAN_OK) && ((CANrxId & 0x80000000) != 0x80000000))  // alternate would be CAN_NOMSG, also not extended frame, id is std 11 bit
+    {    
+      if (rxId == configPage1.canRXmsg_MotecPLM)
       {
-       // id is extended 29bit address
-       //sprintf(msgString, "Extended ID: 0x%.8lX  DLC: %1d  Data:", (rxId & 0x1FFFFFFF), len);
+       canRx_MotecPLM_O2(len, rxBuf);
       }
-    else  
+       
+      if (0) // serial port print 
       {
-       // id is std 11 bit
-       if (rxId == configPage1.canRXmsg_MotecPLM)
-       {
-         canRx_MotecPLM_O2(len, rxBuf);
-       }
-      }
+        Serial.print(rxId, HEX); // print ID
+        Serial.print(" "); 
+        Serial.print(len, HEX); // print DLC
+        Serial.print(" ");
+        
+        for (int i = 0; i<len; i++)  
+        {  // print the data
+          Serial.print(rxBuf[i],HEX);
+          Serial.print(" ");
+        }
+      }        
+    }
+  }
 }
 
 //Handles timeouts for CAN messages not recieved, Called every 100ms.

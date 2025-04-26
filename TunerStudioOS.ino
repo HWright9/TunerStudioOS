@@ -151,10 +151,7 @@ void loop()
 
     if (bitRead(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0ACTIVATED) == true)
     {
-      if(digitalRead(Pin_can0RXInt) == LOW )   // If CAN0_INT pin is low, read receive buffer
-      {
-        CAN0_INT_routine() ;
-      }
+      receive_CAN0_message();
     }
   }
   

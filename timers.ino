@@ -27,8 +27,7 @@ volatile uint8_t TIMR_LoopDlyWarnBits = 0; // Bitfield of warnings that a task w
 void INIT_timers()
 {
 #if defined(CORE_AVR)
-   //Configure Timer2 for our low-freq interrupt code.
-   
+ //Configure Timer2 for our low-freq interrupt code.
   TCCR2A = 0; //disable timer 2 while we run setup
   TCCR2B = 0; //disable timer 2 while we run setup
   
@@ -36,7 +35,7 @@ void INIT_timers()
   OCR2A = 124;                   //Timer 2 set overflow compapre to 124 should equal 1ms, including the zero.
   TCCR2A = (1<<WGM21);           //Timer2 CTC MODE Clear timer on Compare match, WGM21 and WGM20
   TCNT2  = 0;                     // Zero timer.
-  /* Now configure the prescaler to CPU clock divided by 128 = 125Khz */
+  /* Now configure the prescaler to divide the 16MHz CPU clock by 128 = 125Khz */
   TCCR2B = (1<<WGM22) | (1<<CS22)  | (1<<CS20); // Set bits for 128 prescaler.,  WGM22
   TIFR2 = (1<<OCF2A) | (1<<OCF2B) | (1<<TOV2); //Clear the compare flag bits and overflow flag bit
 

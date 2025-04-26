@@ -11,7 +11,9 @@
   #define CAN0_CS         53        // Set CS to pin 53 on Mega
 #else
   #define CAN0_CS         10        // Set CS to pin 10 on UNO
-#endif 
+#endif
+
+#define SD_CS_Pin 9 //SD Card Chip select to pin 9
 
 #define CAN_XTAL_8MHZ           0  // Different MCP2515 boards have different crystals.
 #define CAN_XTAL_16MHZ          1
@@ -21,7 +23,6 @@
 
 
 /*Functions */
-void CAN0_INT_routine(void);
 void INIT_can0(void);
 void CAN0_maintenance(void);
 void Send_CAN0_message(byte bcChan, uint16_t theaddress, byte *thedata);
