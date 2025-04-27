@@ -14,6 +14,7 @@
 //https://developer.mbed.org/handbook/C-Data-Types
 #include <stdint.h>
 #include <Arduino.h>
+#include <limits.h>
 //************************************************
 
 #include "globals.h"
@@ -24,6 +25,7 @@
 #include "directcomms.h"
 #include "storage.h"
 #include "canbus.h"
+#include "SDCard.h"
 #include "tableInterp.h"
 #include "userfunctions.h"
 
@@ -59,6 +61,9 @@ void setup() {
 #if defined(AUX_SERIAL_ENBL)
   AUX_SERIALLink.begin(115200);
 #endif  
+
+
+  INIT_SDCARD();
   
   mainLoopCount = 0;
   Out_TS.Vars.secl = 0;
@@ -187,7 +192,7 @@ void loop()
 */
 void FUNC_5msTask(void)
 {
-  canBroadcast_5ms();
+  //canBroadcast_5ms();
 }
 
 /*
@@ -196,7 +201,7 @@ void FUNC_5msTask(void)
 */
 void FUNC_20msTask(void)
 {
-  canBroadcast_20ms();
+  //canBroadcast_20ms();
 } //END 20ms Task
 
 /*
@@ -205,7 +210,7 @@ void FUNC_20msTask(void)
 */
 void FUNC_50msTask(void)
 {
-  canBroadcast_50ms();
+  //canBroadcast_50ms();
 } //END 50ms Task
 
 /*
@@ -223,7 +228,7 @@ void FUNC_75msTask(void)
 */
 void FUNC_100msTask(void)
 {  
-  canBroadcast_100ms();
+  //canBroadcast_100ms();
   
   recieveCAN_Timeouts();
   
@@ -261,7 +266,7 @@ void FUNC_250msTask(void)
 */
 void FUNC_500msTask(void)
 {
-  canBroadcast_500ms();
+  //canBroadcast_500ms();
   USER_blinkCEL(); // blink the build in LED for heartbeat. 
 } //END 500ms Task
 
@@ -272,7 +277,8 @@ void FUNC_500msTask(void)
 void FUNC_1000msTask(void)
 {
   CAN0_maintenance();
-  canBroadcast_1000ms();
+  //canBroadcast_1000ms();
+  SDCARD_Maint(); // check if we need to trigger a write to the SD card, also happens if the data overflows the SD write buffer.
   
   Out_TS.Vars.readsPerSecond = COMS_readsPerSecCount;
   COMS_readsPerSecCount = 0;

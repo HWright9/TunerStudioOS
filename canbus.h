@@ -27,6 +27,9 @@ void INIT_can0(void);
 void CAN0_maintenance(void);
 void Send_CAN0_message(byte bcChan, uint16_t theaddress, byte *thedata);
 void receive_CAN0_message(void);
+void SDCARD_Write_ASCII_CAN(void);
+void SDCARD_Write_Data_CAN(void);
+void SDCARD_Maint(void);
 void obd_command(byte usecan);
 uint16_t obd_response(byte therequestedPID, uint16_t therequestedCANID);
 
@@ -40,8 +43,6 @@ void canBroadcast_1000ms(void);
 
 
 void recieveCAN_Timeouts(void);
-void canRx_MotecPLM_O2 (uint8_t len, uint8_t rxBuf);
-void canRx_MotecPLM_O2_Dflt(void);
 
 
 #endif

@@ -108,6 +108,14 @@
 #define CANRX_MOTECPLM_DFLT    0 // bit 0 is motec PLM.
 #define CANRX_UNDEFINEDMSG_DFLT      1 // next message and so on...
 
+#define NUM_OF_CAN_RX_IDS 8 //needs to match in the .ini file also.
+
+#define SDLOGMODE_OFF   0
+#define SDLOGMODE_LOGASCII   1
+#define SDLOGMODE_LOGDATA   2
+#define SDLOGMODE_REPLAY  3
+
+
 /* Global Variables Outside status */
 uint8_t tsCanId = 0;          // this is the tunerstudio canID for the device you are requesting data from , this is 0 for the main ecu in the system which is usually the speeduino ecu . 
                               // this value is set in Tunerstudio when configuring your Speeduino
@@ -149,6 +157,10 @@ struct Out_TS_t
   uint16_t digitalPorts32_47_out;
   uint16_t digitalPorts48_63_out;
   uint16_t Analog[16];    // 16bit analog value data array for local analog(0-15)
+  
+  uint16_t Va_h_CANRxIDs[NUM_OF_CAN_RX_IDS]; //  List of ID's RX over CAN
+  uint16_t Va_cnt_CANRXIDsCnt[NUM_OF_CAN_RX_IDS]; // Counts of Each RX id
+  uint8_t  Ve_b_CANRXArrayOverflow; // indicates the RX array has overflowed.
   
   /* Examples below here, can be removed for your project */
   uint16_t dev1;          //developer use only
@@ -207,7 +219,8 @@ struct __attribute__ ( ( packed ) ) config1
   uint8_t allowEEPROMClear: 1;  // EEPROM based lockout of the EEPROM wipe function. Prevents inadvertent serial data from accidently enabling this mode.
   uint8_t unused1_9_bits: 1;
   
-  uint16_t canRXmsg_MotecPLM; // can Address for motec PLM message.
+  uint8_t SD_CardEnbl:1; //Enable for SD card functionality on SPI
+  uint8_t SD_Card_CSPin:6; // Pin for SD card Chip Select
 
 
 //#if defined(CORE_AVR)
@@ -259,6 +272,10 @@ struct __attribute__ ( ( packed ) ) config3
   uint16_t page3ActualSize;  //TS READ ONLY: to check page size in development. This should never exceed the defined page sizes.
   uint32_t page3CRC;         //TS READ ONLY: Future expansion EEPROM CRC for error checking.
 
+  uint8_t Ke_b_canRxEnbl:1;  // Enable CAN recieve messages
+  uint8_t Ke_e_SDLogMode:2; // 0 = 0ff, 1 = LogASCII, 2 = LogHex, 3 = replay
+  
+  int16_t Ke_cnt_SD_ReplayCounts; // -1 = Forever,0 = off, otherwise counts to replay.
 //  uint8_t unused3_0_511[506];
 
 //#if defined(CORE_AVR)
@@ -301,6 +318,7 @@ struct __attribute__ ( ( packed ) ) config5
 
 //Pins
 byte Pin_can0RXInt;
+byte Pin_SDCardCS;
 byte Pin_analogSelector;
 
 

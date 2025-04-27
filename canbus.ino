@@ -8,14 +8,14 @@
 * Based on code by Josh Stewart for the Speeduino project , and Darren Siepka for the GPIO module see www.Speeduino.com for more info a
 */
 
+//#include "SDCard.h"
+
 /*Variables Local to this function*/
-long unsigned int rxId;
+uint32_t rxId;
 unsigned char len = 0;
 unsigned char rxBuf[8];
 uint8_t can0_Msg_FailCntr;
-uint8_t senddata[8] = {0x00, 0x00, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
-
-uint8_t canRx_MotecPLM_O2_tmr = 0;
+uint32_t CANRxMillis = 0;
 
 
 // CAN bus maintenance, call this at a slow rate to recover cleanly from disconnections and enable/disable CAN
@@ -94,18 +94,50 @@ void Send_CAN0_message(byte bcChan, uint16_t theaddress, byte *thedata)
 //---------------------------------------------------------------------------------------------
 
 void receive_CAN0_message()
- 
+{
   uint8_t canErr = CAN_OK;
   
-  while((digitalRead(Pin_can0RXInt) == LOW) && (CAN0.checkReceive() == CAN_MSGAVAIL)) // Digital read CAN INT pin is low
+  while((configPage3.Ke_b_canRxEnbl == true) && (CAN0.checkReceive() == CAN_MSGAVAIL)) // Not using int2
   { 
     canErr = CAN0.readMsgBuf(&rxId, &len, rxBuf);      // Read data: len = data length, buf = data byte(s)
 
-    if ((canErr == CAN_OK) && ((CANrxId & 0x80000000) != 0x80000000))  // alternate would be CAN_NOMSG, also not extended frame, id is std 11 bit
-    {    
-      if (rxId == configPage1.canRXmsg_MotecPLM)
+    if ((canErr == CAN_OK) && ((rxId & 0x80000000) != 0x80000000))  // alternate would be CAN_NOMSG, also not extended frame, id is std 11 bit, Not 29bit
+    {
+      // record the counts of recieved msg IDs      
+      uint8_t Le_IDUpdate = false;
+      for(uint8_t idx = 0; idx < NUM_OF_CAN_RX_IDS; idx++)
       {
-       canRx_MotecPLM_O2(len, rxBuf);
+        if(rxId == Out_TS.Vars.Va_h_CANRxIDs[idx]) //RXid is in the array
+        {
+          if (Out_TS.Vars.Va_cnt_CANRXIDsCnt[idx] < UINT_MAX) { Out_TS.Vars.Va_cnt_CANRXIDsCnt[idx]++; }
+          Le_IDUpdate = true;
+          idx = NUM_OF_CAN_RX_IDS; // exit the for loop
+        }
+        else if (Out_TS.Vars.Va_h_CANRxIDs[idx] == 0)
+        {
+          Out_TS.Vars.Va_h_CANRxIDs[idx] = rxId; //RXid not in the array and there is a blank spot so add it.
+          Le_IDUpdate = true;
+          idx = NUM_OF_CAN_RX_IDS; // exit the for loop
+        }
+        else
+        {
+          // do nothing
+        }
+      }
+      
+      if (Le_IDUpdate == false)
+      {
+        Out_TS.Vars.Ve_b_CANRXArrayOverflow = true;
+      }
+      
+      if (configPage3.Ke_e_SDLogMode == SDLOGMODE_LOGASCII)
+      {
+        SDCARD_Write_ASCII_CAN();
+      }
+      
+      if (configPage3.Ke_e_SDLogMode == SDLOGMODE_LOGDATA)
+      {
+        SDCARD_Write_Data_CAN();
       }
        
       if (0) // serial port print 
@@ -128,22 +160,100 @@ void receive_CAN0_message()
 //Handles timeouts for CAN messages not recieved, Called every 100ms.
 void recieveCAN_Timeouts(void)
 {
-  if (configPage1.canRXmsg_MotecPLM > 0x00) // Enabled Message
-  {
-    if(canRx_MotecPLM_O2_tmr < 255) { canRx_MotecPLM_O2_tmr++; }
-    if(canRx_MotecPLM_O2_tmr > 10) { canRx_MotecPLM_O2_Dflt(); }
-  }
-  else
-  {
-    canRx_MotecPLM_O2_tmr = 0;
-    BIT_CLEAR(Out_TS.Vars.canRXmsg_dflt, CANRX_MOTECPLM_DFLT); // reset default flag    
-  }
-  
+   
   // Check for any faults to set flag
   if (Out_TS.Vars.canRXmsg_dflt > 0x00) { BIT_SET(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0RXMSGERR); }
   else { BIT_CLEAR(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0RXMSGERR); }
 }
   
+  
+
+void SDCARD_Write_ASCII_CAN(void)
+{
+  if(Ve_e_SDFileStatus == SDFILE_CLOSED)
+  {
+    // open the file. note that only one file can be open at a time,
+    // so you have to close this one before opening another.
+    SDCRD_F_DataFile = SD.open("/logging/LOGASCII.txt", FILE_WRITE);
+    if(SDCRD_F_DataFile != 0) 
+    { 
+      Ve_e_SDFileStatus = SDFILE_OPEN;
+      SDCRD_F_DataFile.println("LogStart");      
+    }
+    else 
+    { 
+      Ve_e_SDFileStatus = SDFILE_ERR; 
+    }
+  }
+  
+  if(Ve_e_SDFileStatus == SDFILE_OPEN)
+  {
+    // make a string for assembling the data to log to SD:
+    char delimiter = ',';
+    String dataString = "";
+    CANRxMillis = millis();
+    dataString += String(CANRxMillis); dataString += delimiter;
+    dataString += String(rxId, HEX); dataString += delimiter;
+    dataString += String(len, HEX); dataString += delimiter;
+    for (int i = 0; i<len; i++)  
+    {
+      dataString += String(rxBuf[i], HEX); dataString += delimiter;
+    }
+    SDCRD_F_DataFile.println(dataString); //write string to sd card
+    //Serial.println(dataString);
+  }
+    
+}
+
+void SDCARD_Write_Data_CAN(void)
+{
+  if(Ve_e_SDFileStatus == SDFILE_CLOSED)
+  {
+    // open the file. note that only one file can be open at a time,
+    // so you have to close this one before opening another.
+    //data files are not appended, just logged for replay
+    if(SD.exists("/logging/LOGDat.txt") == true)
+    {
+      SD.remove("/logging/LOGDat.txt");
+    }
+        
+    SDCRD_F_DataFile = SD.open("/logging/LOGDat.txt", FILE_WRITE);
+    if(SDCRD_F_DataFile != 0) 
+    { 
+      Ve_e_SDFileStatus = SDFILE_OPEN;     
+    }
+    else 
+    { 
+      Ve_e_SDFileStatus = SDFILE_ERR; 
+    }
+  }
+  
+  if(Ve_e_SDFileStatus == SDFILE_OPEN)
+  {
+    //write data directly.
+    CANRxMillis = millis();
+    SDCRD_F_DataFile.write(CANRxMillis);
+    SDCRD_F_DataFile.write(rxId);
+    SDCRD_F_DataFile.write(len);
+    SDCRD_F_DataFile.write(rxBuf,len);
+  }
+    
+}
+
+void SDCARD_Maint(void)
+{
+  if ((CANRxMillis > 0) && (millis() > (CANRxMillis + 1000)))
+  {
+    if (Ve_e_SDFileStatus == SDFILE_OPEN) 
+    {
+      SDCRD_F_DataFile.println("LogEnd");
+      SDCRD_F_DataFile.close();
+      Ve_e_SDFileStatus = SDFILE_CLOSED;
+      //Serial.println("SDFILE_CLOSED");
+    }
+  }
+}
+
 
 void canBroadcast_5ms(void)
 {
@@ -213,84 +323,5 @@ void canBroadcast_1000ms(void)
 
 /* CAN RX Messages Below here */
 
-/* Recieve MotecPLM Can message frame on defined CAN ID */
-void canRx_MotecPLM_O2 (uint8_t len, uint8_t rxBuf[])
-{
-  if ((len == 8)) // Check msg on correct address and data length is correct
-  {
-    canRx_MotecPLM_O2_tmr = 0; //reset timeout
-    BIT_CLEAR(Out_TS.Vars.canRXmsg_dflt, CANRX_MOTECPLM_DFLT); // reset default flag
-    
-    //byte0 Compound ID, not used
-    
-    // Check O2 data is valid using sensor status
-    if (rxBuf[7] == 0x00)
-    {
-      //byte1 and 2 Calibrated Sensor Output Value Hi:lo*1 = x.xxxLa
-      uint32_t result = (rxBuf[1] << 8) | rxBuf[2]; //(highByte << 8) | lowByte - this is EQR from PLM
-      
-      Out_TS.Vars.Ve_Eqr_Sensor1 = ((float)result)/1000.0;
-      
-    }
-    else
-    {
-      Out_TS.Vars.Ve_Eqr_Sensor1 = 0.0;
-    }
-
-      
-    //byte3 Heater duty cycle Byte*1 = xxx%
-
-    //byte4 Device Internal Temperature Byte*195/10-500 = xxx.xC
-
-    //byte5 Zp (Pump cell impedance) Byte*1 = X ohm
-
-    //byte6 Diagnostic Field 1
-
-    //byte7 sensor state
-    /*
-    switch (canRxMsg->data[7])
-    {
-      case (0x00):
-      EQRLH_State = e_EQRState_RUN;
-      break;
-      
-      case (0x01):
-      EQRLH_State = e_EQRState_CONTROL_WAIT;
-      break;
-
-      case (0x02):
-      EQRLH_State = e_EQRState_PUMP_WAIT;
-      break;
-
-      case (0x03):
-      EQRLH_State = e_EQRState_WARM_UP;
-      break;
-
-      case (0x04):
-      EQRLH_State = e_EQRState_NO_HEATER;
-      break;
-
-      case (0x05):
-      EQRLH_State = e_EQRState_STOP;
-      break;
-
-      case (0x06):
-      EQRLH_State = e_EQRState_PUMP_OFF;
-      break;
-
-      default:
-      EQRLH_State = e_EQRState_STOP;
-      break;
-    }
-    */
-  }
-}
-
-// Default action when message times out
-void canRx_MotecPLM_O2_Dflt(void)
-{
-  BIT_SET(Out_TS.Vars.canRXmsg_dflt, CANRX_MOTECPLM_DFLT);
-  Out_TS.Vars.Ve_Eqr_Sensor1 = 0.0;
-}
 
 /* End CAN RX Messages */

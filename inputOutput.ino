@@ -45,7 +45,8 @@ void INIT_setPinMapping(void)
   //set pins
   setPortMode(LED_BUILTIN, OUTPUT);  
   if (configPage1.can0RXIntPin > DPIN_DISABLED) { Pin_can0RXInt = pinTranslate(configPage1.can0RXIntPin); setPortMode(Pin_can0RXInt,INPUT_PULLUP); }
-  
+  if ((configPage1.SD_CardEnbl == true) && (configPage1.SD_Card_CSPin > DPIN_DISABLED)) { Pin_SDCardCS = pinTranslate(configPage1.SD_Card_CSPin); setPortMode(Pin_SDCardCS,OUTPUT); }
+    
   if (configPage1.analogSelectorEn == APIN_ENABLED) { Pin_analogSelector = configPage1.analogSelectorPin; }
   
 }
