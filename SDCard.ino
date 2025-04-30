@@ -17,14 +17,14 @@ void INIT_SDCARD(void)
 {
   if (configPage1.SD_CardEnbl == true)
   {
-    
     if (!SD.begin(Pin_SDCardCS)) 
     {
       Ve_e_SDFileStatus = SDFILE_ERR;
+      BIT_CLEAR(Out_TS.Vars.Va_b_SDLoggingStatus, BIT_SDLOG_CARDOK); //set card status  
     }
     else // SD init ok
-    { 
-      
+    {
+      BIT_SET(Out_TS.Vars.Va_b_SDLoggingStatus, BIT_SDLOG_CARDOK); //set card status  
       if (SD.exists("/logging") == false)
       {
         SD.mkdir("/logging");
