@@ -38,7 +38,7 @@
   #define MEGA_AVR
   #define BOARD_MAX_IO_PINS  58 //digital pins + analog channels + 1
   #define BOARD_MAX_DIGITAL_PINS 52
-  #define BOARD_MAX_ADC_PINS 15
+  #define BOARD_MAX_ADC_PINS 16
   
 #elif defined(ARDUINO_AVR_NANO)
   #define BOARD_MAX_IO_PINS 20 //digital pins + analog channels + 1
@@ -73,7 +73,7 @@
 #define BIT_SYSTEM_2                        2
 #define BIT_SYSTEM_BURN_GOOD                7
 
-//Define masks for CanStatus
+//Define masks for Va_b_canstatus
 #define BIT_CANSTATUS_CAN0ACTIVATED         0  //can0 has enabled
 #define BIT_CANSTATUS_CAN0FAILED            1  //can0 soft failure (will retry)
 #define BIT_CANSTATUS_CAN1ACTIVATED         2  //can1 has enabled
@@ -115,6 +115,12 @@
 #define SDLOGMODE_LOGDATA   2
 #define SDLOGMODE_REPLAY  3
 
+// Va_b_SDLoggingStatus bitfield
+#define BIT_SDLOG_CARDOK      0
+#define BIT_SDLOG_FILEOPEN    1
+#define BIT_SDLOG_LOGGING     2
+#define BIT_SDLOG_MANACTIVE   3 
+
 
 /* Global Variables Outside status */
 uint8_t tsCanId = 0;          // this is the tunerstudio canID for the device you are requesting data from , this is 0 for the main ecu in the system which is usually the speeduino ecu . 
@@ -146,21 +152,24 @@ struct Out_TS_t
   uint8_t secl; // counter of seconds 0-255 looping, required for TS comms.
   uint8_t systembits; //system status bits
   uint8_t LoopDlyWarnBits; //indicator that a l
-  uint8_t canstatus;    //canstatus bitfield
+  uint8_t Va_b_canstatus;    //Va_b_canstatus bitfield
   uint16_t canRXmsg_dflt; //check if CAN RX messages are defaulted due to RX timeout
   uint16_t loopsPerSecond;
   uint16_t readsPerSecond; // how many datalog reads in the last sec
   uint16_t UTIL_freeRam;
   uint8_t testIO_hardware;//testIO_hardware
   uint16_t digitalPorts0_15_out;
+#if defined MEGA_AVR
   uint16_t digitalPorts16_31_out;
   uint16_t digitalPorts32_47_out;
   uint16_t digitalPorts48_63_out;
-  uint16_t Analog[16];    // 16bit analog value data array for local analog(0-15)
+#endif
+  uint16_t Analog[BOARD_MAX_ADC_PINS];    // 16bit analog value data array for local analog(0-15)
   
   uint16_t Va_h_CANRxIDs[NUM_OF_CAN_RX_IDS]; //  List of ID's RX over CAN
   uint16_t Va_cnt_CANRXIDsCnt[NUM_OF_CAN_RX_IDS]; // Counts of Each RX id
   uint8_t  Ve_b_CANRXArrayOverflow; // indicates the RX array has overflowed.
+  uint8_t  Va_b_SDLoggingStatus;
   
   /* Examples below here, can be removed for your project */
   uint16_t dev1;          //developer use only
@@ -274,6 +283,7 @@ struct __attribute__ ( ( packed ) ) config3
 
   uint8_t Ke_b_canRxEnbl:1;  // Enable CAN recieve messages
   uint8_t Ke_e_SDLogMode:2; // 0 = 0ff, 1 = LogASCII, 2 = LogHex, 3 = replay
+  uint8_t Ke_e_SDLogAuto:1; // 0 = Manual, 1 = Auto.
   
   int16_t Ke_cnt_SD_ReplayCounts; // -1 = Forever,0 = off, otherwise counts to replay.
 //  uint8_t unused3_0_511[506];

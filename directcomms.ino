@@ -443,7 +443,7 @@ void commandButtons(uint16_t cmdCombined)
       setDigitalPort(LED_BUILTIN, LOW, OUTPUT_NORMAL);
       STOR_eraseEEPROM();
       STOR_loadConfig();
-      while(1){ delay(10000); }  // Wait forever for the user to powercycle the ECU.
+      while(1){ delay(10000); }  // Wait forever for the user to powercycle the ECU, or TS will do it for us.
     }
   }
   
@@ -456,6 +456,15 @@ void commandButtons(uint16_t cmdCombined)
       setup();
       interrupts();
     }
+  }
+  
+  else if (cmdCombined == 260) //cmdSDLogOn
+  {
+    BIT_SET(Out_TS.Vars.Va_b_SDLoggingStatus, BIT_SDLOG_MANACTIVE);  //set testactive flag
+  }
+  else if (cmdCombined == 261) //cmdSDLogOff
+  {
+    BIT_CLEAR(Out_TS.Vars.Va_b_SDLoggingStatus, BIT_SDLOG_MANACTIVE);  //set testactive flag
   }
   
   // Turn Port to logical HIGH

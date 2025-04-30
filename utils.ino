@@ -79,55 +79,55 @@ uint8_t pinTranslateAnalog(uint8_t rawPin)
     case 3: outputPin = A3; break;
     case 4: outputPin = A4; break;
     case 5: outputPin = A5; break;
-    #if BOARD_MAX_ADC_PINS >= 6
+    #if BOARD_MAX_ADC_PINS >= 7
       case 6: outputPin = A6; break;
     #endif
-    #if BOARD_MAX_ADC_PINS >= 7
+    #if BOARD_MAX_ADC_PINS >= 8
       case 7: outputPin = A7; break;
     #endif
-    #if BOARD_MAX_ADC_PINS >= 8
+    #if BOARD_MAX_ADC_PINS >= 9
       case 8: outputPin = A8; break;
     #endif
-    #if BOARD_MAX_ADC_PINS >= 9
+    #if BOARD_MAX_ADC_PINS >= 10
       case 9: outputPin = A9; break;
     #endif
-    #if BOARD_MAX_ADC_PINS >= 10
+    #if BOARD_MAX_ADC_PINS >= 11
       case 10: outputPin = A10; break;
     #endif
-    #if BOARD_MAX_ADC_PINS >= 11
+    #if BOARD_MAX_ADC_PINS >= 12
       case 11: outputPin = A11; break;
     #endif
-    #if BOARD_MAX_ADC_PINS >= 12
+    #if BOARD_MAX_ADC_PINS >= 13
       case 12: outputPin = A12; break;
     #endif
-    #if BOARD_MAX_ADC_PINS >= 13
+    #if BOARD_MAX_ADC_PINS >= 14
       case 13: outputPin = A13; break;
     #endif
-    #if BOARD_MAX_ADC_PINS >= 14
+    #if BOARD_MAX_ADC_PINS >= 15
       case 14: outputPin = A14; break;
     #endif
-    #if BOARD_MAX_ADC_PINS >= 15
+    #if BOARD_MAX_ADC_PINS >= 16
       case 15: outputPin = A15; break;
     #endif
-    #if BOARD_MAX_ADC_PINS >= 16
+    #if BOARD_MAX_ADC_PINS >= 17
       case 16: outputPin = A16; break;
     #endif
-    #if BOARD_MAX_ADC_PINS >= 17
+    #if BOARD_MAX_ADC_PINS >= 18
       case 17: outputPin = A17; break;
     #endif
-    #if BOARD_MAX_ADC_PINS >= 18
+    #if BOARD_MAX_ADC_PINS >= 19
       case 18: outputPin = A18; break;
     #endif
-    #if BOARD_MAX_ADC_PINS >= 19
+    #if BOARD_MAX_ADC_PINS >= 20
       case 19: outputPin = A19; break;
     #endif
-    #if BOARD_MAX_ADC_PINS >= 20
+    #if BOARD_MAX_ADC_PINS >= 21
       case 20: outputPin = A20; break;
     #endif
-    #if BOARD_MAX_ADC_PINS >= 21
+    #if BOARD_MAX_ADC_PINS >= 22
       case 21: outputPin = A21; break;
     #endif
-    #if BOARD_MAX_ADC_PINS >= 22
+    #if BOARD_MAX_ADC_PINS >= 23
       case 22: outputPin = A22; break;
     #endif
   }

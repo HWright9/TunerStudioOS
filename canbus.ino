@@ -23,9 +23,9 @@ void CAN0_maintenance(void)
 {
   if (configPage1.can0Enable == true)
   {
-    if (bitRead(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0ACTIVATED) == false) { INIT_can0(); }    //init can interface 0
+    if (bitRead(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0ACTIVATED) == false) { INIT_can0(); }    //init can interface 0
     
-    else if ((bitRead(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0FAILED) == true)) // CAN bus failed to send many messages, Attempt re-init.
+    else if ((bitRead(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0FAILED) == true)) // CAN bus failed to send many messages, Attempt re-init.
     {
       byte canmsg[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
       Send_CAN0_message(0, 0x799, canmsg);
@@ -43,22 +43,22 @@ void INIT_can0(void)
     if(CANStat == CAN_OK)  
     {
        CAN0.setMode(MCP_NORMAL);
-       BIT_SET(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0ACTIVATED);
+       BIT_SET(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0ACTIVATED);
        can0_Msg_FailCntr = 0;
-       BIT_CLEAR(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0FAILED);
+       BIT_CLEAR(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0FAILED);
         //TS_SERIALLink.println("CAN BUS Shield init ok!");
     }
     else
     {
-      BIT_CLEAR(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0ACTIVATED);
+      BIT_CLEAR(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0ACTIVATED);
       //TS_SERIALLink.println("CAN BUS Shield init fail");
       //TS_SERIALLink.println("Init CAN BUS Shield again");
     }
   }
   else
   { // User disabled CAN
-    BIT_CLEAR(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0ACTIVATED);
-    BIT_CLEAR(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0FAILED);
+    BIT_CLEAR(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0ACTIVATED);
+    BIT_CLEAR(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0FAILED);
     can0_Msg_FailCntr = 0;
   }
   
@@ -74,20 +74,20 @@ void Send_CAN0_message(byte bcChan, uint16_t theaddress, byte *thedata)
   if(CANStat == CAN_OK)
   {
     //Serial.println("Message Sent Successfully!");
-   BIT_CLEAR(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0MSGFAIL);
-   BIT_CLEAR(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0FAILED);
+   BIT_CLEAR(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0MSGFAIL);
+   BIT_CLEAR(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0FAILED);
    can0_Msg_FailCntr = 0;
   } 
   else
   {
     //Serial.println("Error Sending Message...");
-    BIT_SET(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0MSGFAIL);
+    BIT_SET(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0MSGFAIL);
     if (can0_Msg_FailCntr < 255) { can0_Msg_FailCntr++; }
   }  
 
   if (can0_Msg_FailCntr > 50)
   {
-    BIT_SET(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0FAILED); // This stops any further tries at sending messages until re-init
+    BIT_SET(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0FAILED); // This stops any further tries at sending messages until re-init
   }
 }
 
@@ -130,29 +130,33 @@ void receive_CAN0_message()
         Out_TS.Vars.Ve_b_CANRXArrayOverflow = true;
       }
       
-      if (configPage3.Ke_e_SDLogMode == SDLOGMODE_LOGASCII)
+      if (((configPage3.Ke_e_SDLogAuto == true) || 
+           (BIT_CHECK(Out_TS.Vars.Va_b_SDLoggingStatus, BIT_SDLOG_MANACTIVE))) && 
+          (configPage3.Ke_e_SDLogMode == SDLOGMODE_LOGASCII))
       {
         SDCARD_Write_ASCII_CAN();
       }
       
-      if (configPage3.Ke_e_SDLogMode == SDLOGMODE_LOGDATA)
+      if (((configPage3.Ke_e_SDLogAuto == true) || 
+           (BIT_CHECK(Out_TS.Vars.Va_b_SDLoggingStatus, BIT_SDLOG_MANACTIVE))) && 
+          (configPage3.Ke_e_SDLogMode == SDLOGMODE_LOGDATA))
       {
         SDCARD_Write_Data_CAN();
       }
        
-      if (0) // serial port print 
-      {
-        Serial.print(rxId, HEX); // print ID
-        Serial.print(" "); 
-        Serial.print(len, HEX); // print DLC
-        Serial.print(" ");
+      // if (0) // serial port print 
+      // {
+        // Serial.print(rxId, HEX); // print ID
+        // Serial.print(" "); 
+        // Serial.print(len, HEX); // print DLC
+        // Serial.print(" ");
         
-        for (int i = 0; i<len; i++)  
-        {  // print the data
-          Serial.print(rxBuf[i],HEX);
-          Serial.print(" ");
-        }
-      }        
+        // for (int i = 0; i<len; i++)  
+        // {  // print the data
+          // Serial.print(rxBuf[i],HEX);
+          // Serial.print(" ");
+        // }
+      // }        
     }
   }
 }
@@ -162,8 +166,8 @@ void recieveCAN_Timeouts(void)
 {
    
   // Check for any faults to set flag
-  if (Out_TS.Vars.canRXmsg_dflt > 0x00) { BIT_SET(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0RXMSGERR); }
-  else { BIT_CLEAR(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0RXMSGERR); }
+  if (Out_TS.Vars.canRXmsg_dflt > 0x00) { BIT_SET(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0RXMSGERR); }
+  else { BIT_CLEAR(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0RXMSGERR); }
 }
   
   
@@ -188,6 +192,8 @@ void SDCARD_Write_ASCII_CAN(void)
   
   if(Ve_e_SDFileStatus == SDFILE_OPEN)
   {
+    BIT_SET(Out_TS.Vars.Va_b_SDLoggingStatus, BIT_SDLOG_LOGGING); //set logging status
+    BIT_SET(Out_TS.Vars.Va_b_SDLoggingStatus, BIT_SDLOG_FILEOPEN); //set logging status
     // make a string for assembling the data to log to SD:
     char delimiter = ',';
     String dataString = "";
@@ -211,7 +217,7 @@ void SDCARD_Write_Data_CAN(void)
   {
     // open the file. note that only one file can be open at a time,
     // so you have to close this one before opening another.
-    //data files are not appended, just logged for replay
+    //data files are not appended, just logged for replay, so we delete the old file.
     if(SD.exists("/logging/LOGDat.txt") == true)
     {
       SD.remove("/logging/LOGDat.txt");
@@ -230,6 +236,8 @@ void SDCARD_Write_Data_CAN(void)
   
   if(Ve_e_SDFileStatus == SDFILE_OPEN)
   {
+    BIT_SET(Out_TS.Vars.Va_b_SDLoggingStatus, BIT_SDLOG_LOGGING); //set logging status
+    BIT_SET(Out_TS.Vars.Va_b_SDLoggingStatus, BIT_SDLOG_FILEOPEN); //set logging status
     //write data directly.
     CANRxMillis = millis();
     SDCRD_F_DataFile.write(CANRxMillis);
@@ -246,6 +254,8 @@ void SDCARD_Maint(void)
   {
     if (Ve_e_SDFileStatus == SDFILE_OPEN) 
     {
+      BIT_CLEAR(Out_TS.Vars.Va_b_SDLoggingStatus, BIT_SDLOG_LOGGING); //set logging status
+      BIT_CLEAR(Out_TS.Vars.Va_b_SDLoggingStatus, BIT_SDLOG_FILEOPEN); //set logging status
       SDCRD_F_DataFile.println("LogEnd");
       SDCRD_F_DataFile.close();
       Ve_e_SDFileStatus = SDFILE_CLOSED;
@@ -254,23 +264,54 @@ void SDCARD_Maint(void)
   }
 }
 
+// if (configPage3.Ke_e_SDLogMode == SDLOGMODE_REPLAY)
+void canSendSDRecordedData(void)
+{
+ 
+  if(Ve_e_SDFileStatus == SDFILE_CLOSED)
+  {
+    if(SD.exists("/logging/LOGDat.txt") == true) // check for file
+    {
+      SDCRD_F_DataFile = SD.open("/logging/LOGDat.txt", FILE_WRITE);
+      if(SDCRD_F_DataFile != 0) 
+      { 
+        Ve_e_SDFileStatus = SDFILE_OPEN;     
+      }
+      else 
+      { 
+        Ve_e_SDFileStatus = SDFILE_ERR; 
+      }
+    }
+    else
+    {
+      Ve_e_SDFileStatus = SDFILE_ERR; // file does not exist
+    }
+  }
+  
+  if(Ve_e_SDFileStatus == SDFILE_OPEN)
+  {
+    // Read file and send via CAN, save variable with next ms to send can data.
+  }
+}
+
 
 void canBroadcast_5ms(void)
 {
   if ((configPage1.can0Enable == true) && 
-      (bitRead(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0ACTIVATED) == true) &&
-      (bitRead(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0FAILED) == false))
+      (bitRead(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0ACTIVATED) == true) &&
+      (bitRead(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0FAILED) == false))
   {
     byte canmsg[] = { 0, 0, 0, 0, 0, 0, 0, 5 };
     Send_CAN0_message(0, 0x500, canmsg);
   }
 }
 
+
 void canBroadcast_20ms(void)
 {
   if ((configPage1.can0Enable == true) && 
-      (bitRead(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0ACTIVATED) == true) &&
-      (bitRead(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0FAILED) == false))
+      (bitRead(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0ACTIVATED) == true) &&
+      (bitRead(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0FAILED) == false))
   {
   byte canmsg[] = { 0, 0, 0, 0, 0, 0, 0, 20 };
   Send_CAN0_message(0, 0x501, canmsg);
@@ -280,8 +321,8 @@ void canBroadcast_20ms(void)
 void canBroadcast_50ms(void)
 {
   if ((configPage1.can0Enable == true) && 
-      (bitRead(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0ACTIVATED) == true) &&
-      (bitRead(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0FAILED) == false))
+      (bitRead(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0ACTIVATED) == true) &&
+      (bitRead(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0FAILED) == false))
   {
   byte canmsg[] = { 0, 0, 0, 0, 0, 0, 0, 50 };
   Send_CAN0_message(0, 0x502, canmsg);
@@ -291,8 +332,8 @@ void canBroadcast_50ms(void)
 void canBroadcast_100ms(void)
 {
   if ((configPage1.can0Enable == true) && 
-      (bitRead(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0ACTIVATED) == true) &&
-      (bitRead(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0FAILED) == false))
+      (bitRead(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0ACTIVATED) == true) &&
+      (bitRead(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0FAILED) == false))
   {
   byte canmsg[] = { 0, 0, 0, 0, 0, 0, 0, 100 };
   Send_CAN0_message(0, 0x503, canmsg);
@@ -302,8 +343,8 @@ void canBroadcast_100ms(void)
 void canBroadcast_500ms(void)
 {
   if ((configPage1.can0Enable == true) && 
-      (bitRead(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0ACTIVATED) == true) &&
-      (bitRead(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0FAILED) == false))
+      (bitRead(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0ACTIVATED) == true) &&
+      (bitRead(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0FAILED) == false))
   {
   byte canmsg[] = { 0, 0, 0, 0, 0, 0, 5, 000 };
   Send_CAN0_message(0, 0x504, canmsg);
@@ -313,8 +354,8 @@ void canBroadcast_500ms(void)
 void canBroadcast_1000ms(void)
 {
   if ((configPage1.can0Enable == true) && 
-      (bitRead(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0ACTIVATED) == true) &&
-      (bitRead(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0FAILED) == false))
+      (bitRead(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0ACTIVATED) == true) &&
+      (bitRead(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0FAILED) == false))
   {
   byte canmsg[] = { 0, 0, 0, 0, 0, 0, 7, 000 };
   Send_CAN0_message(0, 0x505, canmsg);

@@ -55,7 +55,7 @@ uint16_t readAnalog(uint8_t AinCH)
 {
   uint16_t tempReading = 0;
   
-  if (AinCH < 16)
+  if (AinCH < BOARD_MAX_ADC_PINS)
   {
     tempReading = analogRead(pinTranslateAnalog(AinCH));   //read the adc channel
     #if defined(ARDUINO_AVR_MEGA2560)
@@ -132,9 +132,11 @@ uint8_t readDigitalPort(uint8_t Dpin)
   
   //Align output data to TS
   Out_TS.Vars.digitalPorts0_15_out = digitalPorts0_15.value;
+#if defined MEGA_AVR
   Out_TS.Vars.digitalPorts16_31_out = digitalPorts16_31.value;
   Out_TS.Vars.digitalPorts32_47_out = digitalPorts32_47.value;
   Out_TS.Vars.digitalPorts48_63_out = digitalPorts48_63.value;
+#endif
   
   return pinValue;
 }

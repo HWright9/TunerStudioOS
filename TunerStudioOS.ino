@@ -154,7 +154,7 @@ void loop()
       direct_serial_command();
     }
 
-    if (bitRead(Out_TS.Vars.canstatus, BIT_CANSTATUS_CAN0ACTIVATED) == true)
+    if (bitRead(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0ACTIVATED) == true)
     {
       receive_CAN0_message();
     }
