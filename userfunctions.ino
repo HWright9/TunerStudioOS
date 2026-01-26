@@ -50,3 +50,64 @@ void USER_InputOutput(void)
   Out_TS.Vars.Ve_i_TestByte1 = lowPassFilter_u16(Out_TS.Vars.Analog[0]/4, (uint8_t)configPage2.Ke_i_TestValue, Out_TS.Vars.Ve_i_TestByte1);
   
 }
+
+/* USER_ButtonTest
+* Run Rate: 20ms
+* Read Button Inputs and Set LED's
+*/
+void USER_ButtonTest(void)
+{
+  uint16_t buttonADC = readAnalog(Pin_analogButtons);
+
+  if ((buttonADC > 900) || (buttonADC < 100)) // No buttons pressed, or disconnected
+  {
+    BIT_CLEAR(Vb_b_buttonsStatus,BUTTON_RED);
+    BIT_CLEAR(Vb_b_buttonsStatus,BUTTON_WHITE);
+  }
+  else if ((buttonADC > 660) && (buttonADC < 700)) // Red Button Pressed
+  {
+    BIT_SET(Vb_b_buttonsStatus,BUTTON_RED);
+    BIT_CLEAR(Vb_b_buttonsStatus,BUTTON_WHITE);
+    
+  }
+  else if ((buttonADC > 490) && (buttonADC < 530)) // White Button Pressed
+  {
+    BIT_CLEAR(Vb_b_buttonsStatus,BUTTON_RED);
+    BIT_SET(Vb_b_buttonsStatus,BUTTON_WHITE);
+    setDigitalPort(Pin_LEDGREEN, 0, OUTPUT_NORMAL); // turn on LED
+  }
+  
+  else if ((buttonADC > 390) && (buttonADC < 430)) //Both Buttons Pressed
+  {
+    BIT_SET(Vb_b_buttonsStatus,BUTTON_RED);
+    BIT_SET(Vb_b_buttonsStatus,BUTTON_WHITE);
+  }
+  //else invalid or waiting.
+
+    
+  if(configPage1.LEDSEnbl == false) // not using the LEDs for anything else
+  {    
+    if (bitRead(Vb_b_buttonsStatus,BUTTON_RED) == true)
+    {
+      setDigitalPort(Pin_LEDRED, 0, OUTPUT_NORMAL); // turn on LED
+    }
+    else
+    {
+      setDigitalPort(Pin_LEDRED, 1, OUTPUT_NORMAL); // turn off LED
+    }
+    
+    if (bitRead(Vb_b_buttonsStatus,BUTTON_WHITE) == true)
+    {
+      setDigitalPort(Pin_LEDGREEN, 0, OUTPUT_NORMAL); // turn on LED
+    }
+    else
+    {
+      setDigitalPort(Pin_LEDGREEN, 1, OUTPUT_NORMAL); // turn off LED
+    }
+  }
+  
+  if (bitRead(Vb_b_buttonsStatus,BUTTON_WHITE) == true)
+  {
+    BIT_TOGGLE(Out_TS.Vars.Va_b_SDLoggingStatus, BIT_SDLOG_MANACTIVE);  //toggle logging 
+  }
+}

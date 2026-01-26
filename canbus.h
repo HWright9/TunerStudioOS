@@ -25,7 +25,8 @@
 /*Functions */
 void INIT_can0(void);
 void CAN0_maintenance(void);
-void Send_CAN0_message(byte bcChan, uint16_t theaddress, byte *thedata);
+//void Send_CAN0_message(byte bcChan, uint16_t theaddress, byte *thedata);
+void Send_CAN0_message(uint16_t theaddress, byte len, byte *thedata);
 void receive_CAN0_message(void);
 void SDCARD_Write_ASCII_CAN(void);
 void SDCARD_Write_Data_CAN(void);

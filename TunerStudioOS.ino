@@ -29,6 +29,8 @@
 #include "tableInterp.h"
 #include "userfunctions.h"
 
+extern uint8_t Ve_e_SDFileSendStat;
+
 MCP_CAN CAN0(CAN0_CS);      // Set MCP_CAN CAN0 instance CS to pin 11
 
 struct config1 configPage1;
@@ -45,8 +47,11 @@ HardwareSerial &TS_SERIALLink  = Serial;   // setup which serial port connects t
     HardwareSerial &AUX_SERIALLink = Serial3; // setup which serial port connects to the speeduino secondary serial
 #endif 
 
+uint8_t Ve_b_DebugON = false;//enables serial debug messages. Not compatible with TS coms
+
 uint8_t Ve_t_WarningTimeoutTmr_100ms; // timer with 100ms resolution for warning light timeout.
 volatile uint16_t mainLoopCount;
+uint8_t Ve_t_lookupVar100ms;
 
 void setup() {
   
@@ -73,12 +78,11 @@ void setup() {
 }
 
 /* ------------------ MAIN OS TASK SCHEDULER ------------------ */
-// put your main code here, to run repeatedly:
 void loop()
 {
   uint8_t Le_Cnt_TimedTasksThisLoop = 0;
   
-  if (BIT_CHECK(TIMR_LoopTmrsBits, BIT_TIMER_5MS)) // 200 hertz
+  if (bitRead(TIMR_LoopTmrsBits, BIT_TIMER_5MS)) // 200 hertz
   {
     Le_Cnt_TimedTasksThisLoop++;
     #if defined(AVR_WDT)
@@ -89,49 +93,49 @@ void loop()
     BIT_CLEAR(TIMR_LoopTmrsBits, BIT_TIMER_5MS);
   }
 
-  if (BIT_CHECK(TIMR_LoopTmrsBits, BIT_TIMER_20MS)) //50 hertz
+  if (bitRead(TIMR_LoopTmrsBits, BIT_TIMER_20MS)) //50 hertz
   {
     Le_Cnt_TimedTasksThisLoop++;
     FUNC_20msTask();    
     BIT_CLEAR(TIMR_LoopTmrsBits, BIT_TIMER_20MS);        
   }
 
-  if (BIT_CHECK(TIMR_LoopTmrsBits, BIT_TIMER_50MS)) //20 hertz
+  if (bitRead(TIMR_LoopTmrsBits, BIT_TIMER_50MS)) //20 hertz
   {
     Le_Cnt_TimedTasksThisLoop++;
     FUNC_50msTask(); 
     BIT_CLEAR(TIMR_LoopTmrsBits, BIT_TIMER_50MS);                         
   }
   
-  if (BIT_CHECK(TIMR_LoopTmrsBits, BIT_TIMER_75MS)) //13.33 hertz
+  if (bitRead(TIMR_LoopTmrsBits, BIT_TIMER_75MS)) //13.33 hertz
   {
     Le_Cnt_TimedTasksThisLoop++;
     FUNC_75msTask(); 
     BIT_CLEAR(TIMR_LoopTmrsBits, BIT_TIMER_75MS);                         
   }
   
-  if (BIT_CHECK(TIMR_LoopTmrsBits, BIT_TIMER_100MS)) //10 hertz
+  if (bitRead(TIMR_LoopTmrsBits, BIT_TIMER_100MS)) //10 hertz
   {
     Le_Cnt_TimedTasksThisLoop++;
     FUNC_100msTask();
     BIT_CLEAR(TIMR_LoopTmrsBits, BIT_TIMER_100MS);                         
   }  
 
-  if (BIT_CHECK(TIMR_LoopTmrsBits, BIT_TIMER_250MS)) //4 hertz
+  if (bitRead(TIMR_LoopTmrsBits, BIT_TIMER_250MS)) //4 hertz
   {
     Le_Cnt_TimedTasksThisLoop++;    
     FUNC_250msTask();
     BIT_CLEAR(TIMR_LoopTmrsBits, BIT_TIMER_250MS);                         
   }
 
-  if (BIT_CHECK(TIMR_LoopTmrsBits, BIT_TIMER_500MS)) //2 hertz
+  if (bitRead(TIMR_LoopTmrsBits, BIT_TIMER_500MS)) //2 hertz
   {
     Le_Cnt_TimedTasksThisLoop++;    
     FUNC_500msTask();
     BIT_CLEAR(TIMR_LoopTmrsBits, BIT_TIMER_500MS);                         
   }   
  
-  if (BIT_CHECK(TIMR_LoopTmrsBits, BIT_TIMER_1000MS)) //1 hertz
+  if (bitRead(TIMR_LoopTmrsBits, BIT_TIMER_1000MS)) //1 hertz
   {
     Le_Cnt_TimedTasksThisLoop++;
     FUNC_1000msTask();
@@ -178,6 +182,23 @@ void loop()
     {
       STOR_writeConfigNoBlock();
     }
+    
+    //canBroadcast from sd card;
+  if ((configPage3.Ke_e_SDLogMode == SDLOGMODE_REPLAY) &&
+      (configPage1.can0Enable == true) && 
+      (bitRead(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0ACTIVATED) == true) &&
+      (bitRead(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0FAILED) == false))
+  {
+    if(bitRead(Vb_b_buttonsStatus,BUTTON_WHITE) == true)
+    {
+      Ve_e_SDFileSendStat = SD_FILE_SEND_INIT; // send to init
+    }
+  }
+  else
+  {
+    Ve_e_SDFileSendStat = SD_FILE_SEND_END;
+  }
+  canSendSDRecordedData();
 
   if (mainLoopCount < 65536) { mainLoopCount++; } // update loop counter.
   
@@ -192,7 +213,7 @@ void loop()
 */
 void FUNC_5msTask(void)
 {
-  //canBroadcast_5ms();
+
 }
 
 /*
@@ -202,6 +223,7 @@ void FUNC_5msTask(void)
 void FUNC_20msTask(void)
 {
   //canBroadcast_20ms();
+  USER_ButtonTest();
 } //END 20ms Task
 
 /*
@@ -228,7 +250,16 @@ void FUNC_75msTask(void)
 */
 void FUNC_100msTask(void)
 {  
-  //canBroadcast_100ms();
+  // Example of 2d 8bit Table lookup and sending over CAN bus
+  if(Ve_t_lookupVar100ms<255) {Ve_t_lookupVar100ms = Ve_t_lookupVar100ms + 1; }
+  else { Ve_t_lookupVar100ms = 0; } 
+  Out_TS.Vars.dev4 = u8_table2DLookup_u8(configPage2.exampleTable_Xaxis, configPage2.exampleTable_Ydata, sizeof(configPage2.exampleTable_Xaxis), Ve_t_lookupVar100ms); // generate an output for testing based on time
+  Out_TS.Vars.dev4 = Out_TS.Vars.dev4 * 20; // scale for turning into RPM
+
+  if (configPage1.CANTXTest100msEnbl == true)
+  {
+    canBroadcast_100ms();
+  }
   
   recieveCAN_Timeouts();
   
@@ -237,7 +268,7 @@ void FUNC_100msTask(void)
   // Example of floating points
   Out_TS.Vars.Vf_i_TestFloatOut = configPage2.Kf_i_TestFloat1 + configPage2.Kf_i_TestFloat2;
   // Example of 2d 8bit Table lookup
-  Out_TS.Vars.dev4 = u8_table2DLookup_u8(configPage2.exampleTable_Xaxis, configPage2.exampleTable_Ydata, sizeof(configPage2.exampleTable_Xaxis), configPage2.exampleLookupValue);
+  //Out_TS.Vars.dev4 = u8_table2DLookup_u8(configPage2.exampleTable_Xaxis, configPage2.exampleTable_Ydata, sizeof(configPage2.exampleTable_Xaxis), configPage2.exampleLookupValue);
   // Example of 3D 16bit Table lookup
   Out_TS.Vars.dev1 = u16_table2DLookup_u16(configPage2.example2DTableu16_Xaxis, configPage2.example2DTableu16_Ydata, sizeof(configPage2.example2DTableu16_Xaxis), configPage2.exampleu16LookupValue);
   
@@ -277,8 +308,11 @@ void FUNC_500msTask(void)
 void FUNC_1000msTask(void)
 {
   CAN0_maintenance();
-  //canBroadcast_1000ms();
+  
   SDCARD_Maint(); // check if we need to trigger a write to the SD card, also happens if the data overflows the SD write buffer.
+
+    
+  //canBroadcast_1000ms();
   
   Out_TS.Vars.readsPerSecond = COMS_readsPerSecCount;
   COMS_readsPerSecCount = 0;

@@ -83,56 +83,56 @@ void oneMSInterval() //Most ARM chips can simply call a function
   //200Hz loop, 5ms
   if ((loop1ms % 5) == 0)
   {
-    if (BIT_CHECK(TIMR_LoopTmrsBits, BIT_TIMER_5MS)) { BIT_SET(TIMR_LoopDlyWarnBits, BIT_TIMER_5MS); } // The loop did not finish (or even start) before we tried to run again.
+    if (bitRead(TIMR_LoopTmrsBits, BIT_TIMER_5MS)) { BIT_SET(TIMR_LoopDlyWarnBits, BIT_TIMER_5MS); } // The loop did not finish (or even start) before we tried to run again.
     BIT_SET(TIMR_LoopTmrsBits, BIT_TIMER_5MS);
   }
 
   //50Hz loop, 20ms
   if ((loop1ms % 20) == 1)
   {
-    if (BIT_CHECK(TIMR_LoopTmrsBits, BIT_TIMER_20MS)) { BIT_SET(TIMR_LoopDlyWarnBits, BIT_TIMER_20MS); } // The loop did not finish (or even start) before we tried to run again.
+    if (bitRead(TIMR_LoopTmrsBits, BIT_TIMER_20MS)) { BIT_SET(TIMR_LoopDlyWarnBits, BIT_TIMER_20MS); } // The loop did not finish (or even start) before we tried to run again.
     BIT_SET(TIMR_LoopTmrsBits, BIT_TIMER_20MS);
   }
 
   //20Hz loop, 50ms
   if ((loop1ms % 50) == 2)
   {
-    if (BIT_CHECK(TIMR_LoopTmrsBits, BIT_TIMER_50MS)) { BIT_SET(TIMR_LoopDlyWarnBits, BIT_TIMER_50MS); } // The loop did not finish (or even start) before we tried to run again.
+    if (bitRead(TIMR_LoopTmrsBits, BIT_TIMER_50MS)) { BIT_SET(TIMR_LoopDlyWarnBits, BIT_TIMER_50MS); } // The loop did not finish (or even start) before we tried to run again.
     BIT_SET(TIMR_LoopTmrsBits, BIT_TIMER_50MS);
   }
   
   //13.33Hz loop, 75ms
   if ((loop1ms % 75) == 2)
   {
-    if (BIT_CHECK(TIMR_LoopTmrsBits, BIT_TIMER_75MS)) { BIT_SET(TIMR_LoopDlyWarnBits, BIT_TIMER_75MS); } // The loop did not finish (or even start) before we tried to run again.
+    if (bitRead(TIMR_LoopTmrsBits, BIT_TIMER_75MS)) { BIT_SET(TIMR_LoopDlyWarnBits, BIT_TIMER_75MS); } // The loop did not finish (or even start) before we tried to run again.
     BIT_SET(TIMR_LoopTmrsBits, BIT_TIMER_75MS);
   }
   
   //10Hz loop, 100ms
   if ((loop1ms % 100) == 3)
   {
-    if (BIT_CHECK(TIMR_LoopTmrsBits, BIT_TIMER_100MS)) { BIT_SET(TIMR_LoopDlyWarnBits, BIT_TIMER_100MS); } // The loop did not finish (or even start) before we tried to run again.
+    if (bitRead(TIMR_LoopTmrsBits, BIT_TIMER_100MS)) { BIT_SET(TIMR_LoopDlyWarnBits, BIT_TIMER_100MS); } // The loop did not finish (or even start) before we tried to run again.
     BIT_SET(TIMR_LoopTmrsBits, BIT_TIMER_100MS);
   }
 
   //4Hz loop, 250ms
   if ((loop1ms % 250) == 4)
   {
-    if (BIT_CHECK(TIMR_LoopTmrsBits, BIT_TIMER_250MS)) { BIT_SET(TIMR_LoopDlyWarnBits, BIT_TIMER_250MS); } // The loop did not finish (or even start) before we tried to run again.
+    if (bitRead(TIMR_LoopTmrsBits, BIT_TIMER_250MS)) { BIT_SET(TIMR_LoopDlyWarnBits, BIT_TIMER_250MS); } // The loop did not finish (or even start) before we tried to run again.
     BIT_SET(TIMR_LoopTmrsBits, BIT_TIMER_250MS);
   }
   
   //2Hz loop, 500ms
   if ((loop1ms % 500) == 4)
   {
-    if (BIT_CHECK(TIMR_LoopTmrsBits, BIT_TIMER_500MS)) { BIT_SET(TIMR_LoopDlyWarnBits, BIT_TIMER_500MS); } // The loop did not finish (or even start) before we tried to run again.
+    if (bitRead(TIMR_LoopTmrsBits, BIT_TIMER_500MS)) { BIT_SET(TIMR_LoopDlyWarnBits, BIT_TIMER_500MS); } // The loop did not finish (or even start) before we tried to run again.
     BIT_SET(TIMR_LoopTmrsBits, BIT_TIMER_500MS);
   }
 
   //1Hz loop, 1000ms
   if ((loop1ms % 1000) == 4)
   {
-    if (BIT_CHECK(TIMR_LoopTmrsBits, BIT_TIMER_1000MS)) { BIT_SET(TIMR_LoopDlyWarnBits, BIT_TIMER_1000MS); } // The loop did not finish (or even start) before we tried to run again.
+    if (bitRead(TIMR_LoopTmrsBits, BIT_TIMER_1000MS)) { BIT_SET(TIMR_LoopDlyWarnBits, BIT_TIMER_1000MS); } // The loop did not finish (or even start) before we tried to run again.
     BIT_SET(TIMR_LoopTmrsBits, BIT_TIMER_1000MS);
     
     if (LoopDelayWarningCntr >= 2)

@@ -8,6 +8,7 @@
 
 void USER_blinkCEL(void);
 void USER_InputOutput(void);
+void USER_ButtonTest(void);
 
 
 #endif //USERFUNC_H

@@ -122,7 +122,7 @@ uint16_t u16_table2DLookup_u16(uint16_t *Xaxis, uint16_t *Ydata, uint16_t tableS
   if(Ydata[i] < Ydata[i-1]) { Ydiff = Ydata[i-1] - Ydata[i]; BIT_TOGGLE(sign,0); } // Invert sign if negative
   else { Ydiff = Ydata[i] - Ydata[i-1]; } // Positive 73 +
   
-  if (BIT_CHECK(sign,0) == true) // Positive
+  if (bitRead(sign,0) == true) // Positive
   {
 	  returnVal = uint16_t((uint32_t)Ydata[i-1] + (( m * Ydiff ) / Xdiff)); // 127+54 = 181
   }

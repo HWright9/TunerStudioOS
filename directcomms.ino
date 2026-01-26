@@ -460,18 +460,23 @@ void commandButtons(uint16_t cmdCombined)
   
   else if (cmdCombined == 260) //cmdSDLogOn
   {
-    BIT_SET(Out_TS.Vars.Va_b_SDLoggingStatus, BIT_SDLOG_MANACTIVE);  //set testactive flag
+    BIT_SET(Out_TS.Vars.Va_b_SDLoggingStatus, BIT_SDLOG_MANACTIVE);  //set 
   }
   else if (cmdCombined == 261) //cmdSDLogOff
   {
-    BIT_CLEAR(Out_TS.Vars.Va_b_SDLoggingStatus, BIT_SDLOG_MANACTIVE);  //set testactive flag
+    BIT_CLEAR(Out_TS.Vars.Va_b_SDLoggingStatus, BIT_SDLOG_MANACTIVE);  //clear
+  }
+  
+  else if (cmdCombined == 262) //cmdSDReplayReset
+  {
+    BIT_SET(Out_TS.Vars.Va_b_SDLoggingStatus, BIT_SDLOG_REPLAYRESET);  //set restart replay, bit cleared in function.
   }
   
   // Turn Port to logical HIGH
   else if ((cmdCombined >=513) && (cmdCombined <= 576)) //64 digital ports
   {
     // Turn a port to HIGH state and set override flag
-    if(BIT_CHECK(Out_TS.Vars.testIO_hardware, BIT_TESTHW_ACTIVE))
+    if(bitRead(Out_TS.Vars.testIO_hardware, BIT_TESTHW_ACTIVE))
     {
       setDigitalPort((cmdCombined-513), HIGH, OUTPUT_OVERRIDE);
       //BIT_SET(Out_TS.Vars.digOut, (cmdCombined-513));
@@ -482,7 +487,7 @@ void commandButtons(uint16_t cmdCombined)
   else if ((cmdCombined >=769) && (cmdCombined <= 832)) //64 digital ports
   {
     // Turn a port to LOW state and set override flag
-    if(BIT_CHECK(Out_TS.Vars.testIO_hardware, BIT_TESTHW_ACTIVE))
+    if(bitRead(Out_TS.Vars.testIO_hardware, BIT_TESTHW_ACTIVE))
       {
         setDigitalPort((cmdCombined-769), LOW, OUTPUT_OVERRIDE);
         //BIT_CLEAR(Out_TS.Vars.digOut, (cmdCombined-769));

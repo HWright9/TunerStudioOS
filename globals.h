@@ -76,12 +76,12 @@
 //Define masks for Va_b_canstatus
 #define BIT_CANSTATUS_CAN0ACTIVATED         0  //can0 has enabled
 #define BIT_CANSTATUS_CAN0FAILED            1  //can0 soft failure (will retry)
-#define BIT_CANSTATUS_CAN1ACTIVATED         2  //can1 has enabled
-#define BIT_CANSTATUS_CAN1FAILED            3  //can1 failed o configure
+#define BIT_CANSTATUS_CAN0RXFILTER          2  //can0 RX Filter is active
+#define BIT_CANSTATUS_LEDRED                3  //Status red LED for CAN status
 #define BIT_CANSTATUS_CAN0MSGFAIL           4  //can0 message send failure.
-#define BIT_CANSTATUS_CAN1MSGFAIL           5  //can1 message send failure.
+#define BIT_CANSTATUS_LEDGREEN              5  //Status green LED for CAN status
 #define BIT_CANSTATUS_CAN0RXMSGERR          6  //can0 Recieve error (timeout or other)
-#define BIT_CANSTATUS_CAN1RXMSGERR          7  //can1 Recieve error (timeout or other)
+#define BIT_CANSTATUS_SPARE3          7  //can1 Recieve error (timeout or other)
 
 //Define bitmask for testoutputs
 #define BIT_TESTHW_ACTIVE                   1  // testactive flag
@@ -89,10 +89,11 @@
 //Handy bitsetting macros
 #define BIT_SET(a,pos)        ((a) |= (1<<(pos)))     //set bit in variable (a) at position (pos)
 #define BIT_CLEAR(a,pos)      ((a) &= ~(1<<(pos)))    //clear bit in variable (a) at position (pos)
-#define BIT_WRITE(a,b,c)    (bitWrite(a,pos,b))     //write bit in variable (a) at position (pos) with value (b)
-#define BIT_TOGGLE(a,pos)    ((a) = (a)^(pos)) //Toggle (flip) bit in variable (a) at position (pos)
-#define BIT_CHECK(var,pos)  ((var) & (1<<(pos)))               //gives and answer of the decimal value of the binary position being tested if was 1.
-#define BIT_sCHECK(var,pos) (((var) & (1<<(pos)))>>pos)       // gives a 1 or 0 answer according to if the bit at pos was 1 or 0
+#define BIT_WRITE(a,b,c)      (bitWrite(a,pos,b))     //write bit in variable (a) at position (pos) with value (b)
+//#define BIT_TOGGLE(a,pos)    ((a) = (a)^(pos)) 
+#define BIT_TOGGLE(a,pos) ((a) ^= (1 << (pos))) //Toggle (flip) bit in variable (a) at position (pos)
+#define BIT_dVAL(var,pos)  ((var) & (1<<(pos)))               //gives and answer of the decimal value of the binary position being tested if was 1.
+#define BIT_CHECK(var,pos) (((var) & (1<<(pos)))>>pos)       // gives a 1 or 0 answer according to if the bit at pos was 1 or 0
 
 
 #define BIT_TIMER_1000MS        0
@@ -116,10 +117,22 @@
 #define SDLOGMODE_REPLAY  3
 
 // Va_b_SDLoggingStatus bitfield
-#define BIT_SDLOG_CARDOK      0
-#define BIT_SDLOG_FILEOPEN    1
-#define BIT_SDLOG_LOGGING     2
-#define BIT_SDLOG_MANACTIVE   3 
+#define BIT_SDLOG_CARDOK        0
+#define BIT_SDLOG_FILEOPEN      1
+#define BIT_SDLOG_LOGGING       2
+#define BIT_SDLOG_MANACTIVE     3
+#define BIT_SDLOG_REPLAYRESET   4
+#define BIT_SDLOG_SENTDATA      5
+
+// Ve_e_SDFileSendStat types
+#define SD_FILE_SEND_INIT 0
+#define SD_FILE_SEND_PENDING 1 
+#define SD_FILE_SEND_SENT 2
+#define SD_FILE_SEND_END 3
+
+//Vb_b_buttonsStatus
+#define BUTTON_RED    0
+#define BUTTON_WHITE  1
 
 
 /* Global Variables Outside status */
@@ -140,6 +153,8 @@ const uint16_t page_5_size = 512;
 #endif
 
 uint8_t currentPage = 0; // TS controlled page for reading and writing EEPROM.
+
+uint8_t Vb_b_buttonsStatus = 0;
 
 /* The global serial transmit status object.
 * All variables in this list will be transmitted to Tuner Studio in the order presented here.
@@ -170,6 +185,8 @@ struct Out_TS_t
   uint16_t Va_cnt_CANRXIDsCnt[NUM_OF_CAN_RX_IDS]; // Counts of Each RX id
   uint8_t  Ve_b_CANRXArrayOverflow; // indicates the RX array has overflowed.
   uint8_t  Va_b_SDLoggingStatus;
+  uint8_t  Ve_e_SDFileSendStat;
+  
   
   /* Examples below here, can be removed for your project */
   uint16_t dev1;          //developer use only
@@ -220,16 +237,20 @@ struct __attribute__ ( ( packed ) ) config1
   uint8_t can0XTalFreq: 2;          // MCP2515 board chip frequency defined in MCP_CAN library v1.5 mcp_can_dfs.h
   uint8_t can0Unusedbits: 1;
   uint8_t can0RXIntPin: 6;
-  uint8_t unused1_8_bits: 2;
+  uint8_t unused1_8_bits: 2; // Unused
 
   uint8_t analogSelectorPin: 4;
   uint8_t analogSelectorEn: 1;
   uint8_t allowHWTestMode: 1;  // EEPROM based lockout of the hardware test mode. Prevents inadvertent serial data from accidently enabling this mode.
   uint8_t allowEEPROMClear: 1;  // EEPROM based lockout of the EEPROM wipe function. Prevents inadvertent serial data from accidently enabling this mode.
-  uint8_t unused1_9_bits: 1;
+  uint8_t unused1_9_bits: 1; // Unused
   
   uint8_t SD_CardEnbl:1; //Enable for SD card functionality on SPI
   uint8_t SD_Card_CSPin:6; // Pin for SD card Chip Select
+  uint8_t unused1_10_bits:1; // Unused
+  
+  uint8_t LEDSEnbl:1;  // Enables LED outputs
+  uint8_t CANTXTest100msEnbl:1; // Enables Test of CAN data 100ms RPM linked to Dev4
 
 
 //#if defined(CORE_AVR)
@@ -286,6 +307,9 @@ struct __attribute__ ( ( packed ) ) config3
   uint8_t Ke_e_SDLogAuto:1; // 0 = Manual, 1 = Auto.
   
   int16_t Ke_cnt_SD_ReplayCounts; // -1 = Forever,0 = off, otherwise counts to replay.
+
+  uint16_t Ke_h_CANIDMin; // lowest value of CANID rx/tx
+  uint16_t Ke_h_CANIDMax;  // highest value of CANID to rx/tx
 //  uint8_t unused3_0_511[506];
 
 //#if defined(CORE_AVR)
@@ -324,12 +348,17 @@ struct __attribute__ ( ( packed ) ) config5
 //  } __attribute__((__packed__)); //The 32 bit systems require all structs to be fully packed
 //#endif
 #endif
+
+
  //declare io pins
 
 //Pins
 byte Pin_can0RXInt;
 byte Pin_SDCardCS;
+byte Pin_LEDRED;
+byte Pin_LEDGREEN;
 byte Pin_analogSelector;
+byte Pin_analogButtons;
 
 
 // global variables 

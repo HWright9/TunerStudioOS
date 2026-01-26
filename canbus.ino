@@ -15,8 +15,19 @@ uint32_t rxId;
 unsigned char len = 0;
 unsigned char rxBuf[8];
 uint8_t can0_Msg_FailCntr;
-uint32_t CANRxMillis = 0;
+uint32_t CANLogMillis = 0;
+uint32_t sdFileLogPrev = 0;
 
+uint8_t Ve_e_SDFileSendStat;
+
+struct s_sdLogBuff{
+  uint32_t logMillis;
+  uint32_t canID;
+  unsigned char length;
+  unsigned char canmsgData[8]; 
+};
+  
+s_sdLogBuff sdLogBuff;
 
 // CAN bus maintenance, call this at a slow rate to recover cleanly from disconnections and enable/disable CAN
 void CAN0_maintenance(void)
@@ -27,8 +38,9 @@ void CAN0_maintenance(void)
     
     else if ((bitRead(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0FAILED) == true)) // CAN bus failed to send many messages, Attempt re-init.
     {
-      byte canmsg[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
-      Send_CAN0_message(0, 0x799, canmsg);
+      INIT_can0();
+      //byte canmsg[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+      //Send_CAN0_message(0, 0x799, canmsg);
     }
   }
 }
@@ -61,15 +73,15 @@ void INIT_can0(void)
     BIT_CLEAR(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0FAILED);
     can0_Msg_FailCntr = 0;
   }
-  
+  Ve_e_SDFileSendStat = SD_FILE_SEND_INIT;
 }
 
 
 //----------------------------------------------------------------------------------------
-void Send_CAN0_message(byte bcChan, uint16_t theaddress, byte *thedata)
+void Send_CAN0_message(uint16_t theaddress, byte len, byte *thedata)
 {
 
-  byte CANStat = CAN0.sendMsgBuf(theaddress, 0, 8, thedata);
+  byte CANStat = CAN0.sendMsgBuf(theaddress, 0, len, thedata);
   //Out_TS.Vars.dev1 = CANStat;    
   if(CANStat == CAN_OK)
   {
@@ -77,6 +89,12 @@ void Send_CAN0_message(byte bcChan, uint16_t theaddress, byte *thedata)
    BIT_CLEAR(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0MSGFAIL);
    BIT_CLEAR(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0FAILED);
    can0_Msg_FailCntr = 0;
+   if(configPage1.LEDSEnbl == true)
+   {
+     BIT_TOGGLE(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_LEDRED);
+     uint8_t Le_b_ledStat = !bitRead(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_LEDRED);
+     setDigitalPort(Pin_LEDRED, Le_b_ledStat , OUTPUT_NORMAL); // Set LED to variable status.
+   }
   } 
   else
   {
@@ -103,60 +121,69 @@ void receive_CAN0_message()
 
     if ((canErr == CAN_OK) && ((rxId & 0x80000000) != 0x80000000))  // alternate would be CAN_NOMSG, also not extended frame, id is std 11 bit, Not 29bit
     {
-      // record the counts of recieved msg IDs      
-      uint8_t Le_IDUpdate = false;
-      for(uint8_t idx = 0; idx < NUM_OF_CAN_RX_IDS; idx++)
+      if(Ve_b_DebugON == true) 
+      { 
+        Serial.print (rxId,HEX); Serial.print(" ");
+        Serial.print (configPage3.Ke_h_CANIDMin,HEX); Serial.print(" ");
+        Serial.print (configPage3.Ke_h_CANIDMax,HEX); Serial.println(" ");
+      }
+      if ((rxId >= configPage3.Ke_h_CANIDMin) && (rxId <= configPage3.Ke_h_CANIDMax))
       {
-        if(rxId == Out_TS.Vars.Va_h_CANRxIDs[idx]) //RXid is in the array
+        BIT_CLEAR(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0RXFILTER);
+        // record the counts of recieved msg IDs      
+        uint8_t Le_IDUpdate = false;
+        for(uint8_t idx = 0; idx < NUM_OF_CAN_RX_IDS; idx++)
         {
-          if (Out_TS.Vars.Va_cnt_CANRXIDsCnt[idx] < UINT_MAX) { Out_TS.Vars.Va_cnt_CANRXIDsCnt[idx]++; }
-          Le_IDUpdate = true;
-          idx = NUM_OF_CAN_RX_IDS; // exit the for loop
+          if(rxId == Out_TS.Vars.Va_h_CANRxIDs[idx]) //RXid is in the array
+          {
+            if (Out_TS.Vars.Va_cnt_CANRXIDsCnt[idx] < UINT_MAX) { Out_TS.Vars.Va_cnt_CANRXIDsCnt[idx]++; }
+            Le_IDUpdate = true;
+            idx = NUM_OF_CAN_RX_IDS; // exit the for loop
+          }
+          else if (Out_TS.Vars.Va_h_CANRxIDs[idx] == 0)
+          {
+            Out_TS.Vars.Va_h_CANRxIDs[idx] = rxId; //RXid not in the array and there is a blank spot so add it.
+            Le_IDUpdate = true;
+            idx = NUM_OF_CAN_RX_IDS; // exit the for loop
+          }
+          else
+          {
+            // do nothing
+          }
         }
-        else if (Out_TS.Vars.Va_h_CANRxIDs[idx] == 0)
-        {
-          Out_TS.Vars.Va_h_CANRxIDs[idx] = rxId; //RXid not in the array and there is a blank spot so add it.
-          Le_IDUpdate = true;
-          idx = NUM_OF_CAN_RX_IDS; // exit the for loop
-        }
-        else
-        {
-          // do nothing
-        }
-      }
-      
-      if (Le_IDUpdate == false)
-      {
-        Out_TS.Vars.Ve_b_CANRXArrayOverflow = true;
-      }
-      
-      if (((configPage3.Ke_e_SDLogAuto == true) || 
-           (BIT_CHECK(Out_TS.Vars.Va_b_SDLoggingStatus, BIT_SDLOG_MANACTIVE))) && 
-          (configPage3.Ke_e_SDLogMode == SDLOGMODE_LOGASCII))
-      {
-        SDCARD_Write_ASCII_CAN();
-      }
-      
-      if (((configPage3.Ke_e_SDLogAuto == true) || 
-           (BIT_CHECK(Out_TS.Vars.Va_b_SDLoggingStatus, BIT_SDLOG_MANACTIVE))) && 
-          (configPage3.Ke_e_SDLogMode == SDLOGMODE_LOGDATA))
-      {
-        SDCARD_Write_Data_CAN();
-      }
-       
-      // if (0) // serial port print 
-      // {
-        // Serial.print(rxId, HEX); // print ID
-        // Serial.print(" "); 
-        // Serial.print(len, HEX); // print DLC
-        // Serial.print(" ");
         
-        // for (int i = 0; i<len; i++)  
-        // {  // print the data
-          // Serial.print(rxBuf[i],HEX);
-          // Serial.print(" ");
-        // }
-      // }        
+        if (Le_IDUpdate == false)
+        {
+          Out_TS.Vars.Ve_b_CANRXArrayOverflow = true;
+        }
+        
+        if ((configPage3.Ke_e_SDLogMode == SDLOGMODE_LOGASCII) &&
+            ((configPage3.Ke_e_SDLogAuto == true) || 
+            (bitRead(Out_TS.Vars.Va_b_SDLoggingStatus, BIT_SDLOG_MANACTIVE))))
+        {
+          SDCARD_Write_ASCII_CAN();          
+        }
+        
+        if ((configPage3.Ke_e_SDLogMode == SDLOGMODE_LOGDATA) &&
+            ((configPage3.Ke_e_SDLogAuto == true) || 
+            (bitRead(Out_TS.Vars.Va_b_SDLoggingStatus, BIT_SDLOG_MANACTIVE))))
+        {
+          SDCARD_Write_Data_CAN();
+        }
+        
+        if(configPage1.LEDSEnbl == true)
+        {
+          BIT_TOGGLE(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_LEDGREEN);
+          uint8_t Le_b_ledStat = !bitRead(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_LEDGREEN);
+          setDigitalPort(Pin_LEDGREEN, Le_b_ledStat, OUTPUT_NORMAL); // Set LED to variable status.
+        }
+      }
+      else
+      {
+        // Msg recieved but was filtered.
+        BIT_SET(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0RXFILTER);
+      }
+
     }
   }
 }
@@ -197,8 +224,8 @@ void SDCARD_Write_ASCII_CAN(void)
     // make a string for assembling the data to log to SD:
     char delimiter = ',';
     String dataString = "";
-    CANRxMillis = millis();
-    dataString += String(CANRxMillis); dataString += delimiter;
+    CANLogMillis = millis();
+    dataString += String(CANLogMillis); dataString += delimiter;
     dataString += String(rxId, HEX); dataString += delimiter;
     dataString += String(len, HEX); dataString += delimiter;
     for (int i = 0; i<len; i++)  
@@ -211,6 +238,7 @@ void SDCARD_Write_ASCII_CAN(void)
     
 }
 
+
 void SDCARD_Write_Data_CAN(void)
 {
   if(Ve_e_SDFileStatus == SDFILE_CLOSED)
@@ -218,12 +246,12 @@ void SDCARD_Write_Data_CAN(void)
     // open the file. note that only one file can be open at a time,
     // so you have to close this one before opening another.
     //data files are not appended, just logged for replay, so we delete the old file.
-    if(SD.exists("/logging/LOGDat.txt") == true)
+    if(SD.exists("/logging/LOGDAT.DAT") == true)
     {
-      SD.remove("/logging/LOGDat.txt");
+      SD.remove("/logging/LOGDAT.DAT");
     }
         
-    SDCRD_F_DataFile = SD.open("/logging/LOGDat.txt", FILE_WRITE);
+    SDCRD_F_DataFile = SD.open("/logging/LOGDAT.DAT", FILE_WRITE);
     if(SDCRD_F_DataFile != 0) 
     { 
       Ve_e_SDFileStatus = SDFILE_OPEN;     
@@ -239,18 +267,28 @@ void SDCARD_Write_Data_CAN(void)
     BIT_SET(Out_TS.Vars.Va_b_SDLoggingStatus, BIT_SDLOG_LOGGING); //set logging status
     BIT_SET(Out_TS.Vars.Va_b_SDLoggingStatus, BIT_SDLOG_FILEOPEN); //set logging status
     //write data directly.
-    CANRxMillis = millis();
-    SDCRD_F_DataFile.write(CANRxMillis);
-    SDCRD_F_DataFile.write(rxId);
-    SDCRD_F_DataFile.write(len);
-    SDCRD_F_DataFile.write(rxBuf,len);
+    CANLogMillis = millis();
+
+    sdLogBuff.logMillis = CANLogMillis;
+    sdLogBuff.canID = rxId;
+    sdLogBuff.length = len;
+    for (int i = 0; i<len; i++)  
+    {
+      sdLogBuff.canmsgData[i] = rxBuf[i];
+    }
+
+    SDCRD_F_DataFile.write((byte*)&sdLogBuff, sizeof(sdLogBuff));
+    // SDCRD_F_DataFile.write((byte*)&CANLogMillis, sizeof(CANLogMillis));
+    // SDCRD_F_DataFile.write((byte*)&rxId, sizeof(rxId));
+    // SDCRD_F_DataFile.write(len);
+    // SDCRD_F_DataFile.write(rxBuf,len);
   }
     
 }
 
 void SDCARD_Maint(void)
 {
-  if ((CANRxMillis > 0) && (millis() > (CANRxMillis + 1000)))
+  if ((CANLogMillis > 0) && (millis() > (CANLogMillis + 1000)))
   {
     if (Ve_e_SDFileStatus == SDFILE_OPEN) 
     {
@@ -259,39 +297,116 @@ void SDCARD_Maint(void)
       SDCRD_F_DataFile.println("LogEnd");
       SDCRD_F_DataFile.close();
       Ve_e_SDFileStatus = SDFILE_CLOSED;
+      Ve_e_SDFileSendStat = SD_FILE_SEND_END;
       //Serial.println("SDFILE_CLOSED");
     }
   }
 }
 
-// if (configPage3.Ke_e_SDLogMode == SDLOGMODE_REPLAY)
 void canSendSDRecordedData(void)
 {
- 
-  if(Ve_e_SDFileStatus == SDFILE_CLOSED)
+  uint8_t FileStat = -1;
+  
+  switch (Ve_e_SDFileSendStat)
   {
-    if(SD.exists("/logging/LOGDat.txt") == true) // check for file
-    {
-      SDCRD_F_DataFile = SD.open("/logging/LOGDat.txt", FILE_WRITE);
-      if(SDCRD_F_DataFile != 0) 
-      { 
-        Ve_e_SDFileStatus = SDFILE_OPEN;     
+    case SD_FILE_SEND_INIT:
+      
+      if(SD.exists("/logging/LOGDAT.DAT") == true) // check for file
+      {
+        if(Ve_e_SDFileStatus == SDFILE_OPEN) // if already open. Close it
+        {
+          SDCRD_F_DataFile.close();
+        }
+        
+        SDCRD_F_DataFile = SD.open("/logging/LOGDAT.DAT", FILE_READ); // open file
+        if(SDCRD_F_DataFile != 0) 
+        { 
+          Ve_e_SDFileStatus = SDFILE_OPEN;
+          BIT_SET(Out_TS.Vars.Va_b_SDLoggingStatus, BIT_SDLOG_FILEOPEN); //set logging status
+          
+          // inital read of SD card.
+          if (SDCRD_F_DataFile.available() >= sizeof(sdLogBuff))
+          {
+            FileStat = SDCRD_F_DataFile.read(&sdLogBuff, sizeof(sdLogBuff)); // read a row of data
+            
+            if(FileStat == -1)
+            {
+              Ve_e_SDFileSendStat = SD_FILE_SEND_END;
+            }
+            
+            sdFileLogPrev = sdLogBuff.logMillis; // record timestamp for next time.
+            CANLogMillis = millis(); // record system time stamp for next time.
+            Send_CAN0_message(sdLogBuff.canID, sdLogBuff.length, sdLogBuff.canmsgData);
+            Ve_e_SDFileSendStat = SD_FILE_SEND_SENT;
+          }
+          else
+          {
+            Ve_e_SDFileSendStat = SD_FILE_SEND_END;
+          }
+        }
+        else  // error opening file.
+        { 
+          Ve_e_SDFileStatus = SDFILE_ERR;
+          Ve_e_SDFileSendStat = SD_FILE_SEND_END;
+        }
       }
-      else 
-      { 
+      else // file does not exist
+      {
         Ve_e_SDFileStatus = SDFILE_ERR; 
+        Ve_e_SDFileSendStat = SD_FILE_SEND_END;
       }
-    }
-    else
-    {
-      Ve_e_SDFileStatus = SDFILE_ERR; // file does not exist
-    }
+    break;
+    
+    case SD_FILE_SEND_PENDING:
+      if ((millis() - CANLogMillis) >= (sdLogBuff.logMillis - sdFileLogPrev))
+      {
+        if((sdLogBuff.canID >= configPage3.Ke_h_CANIDMin) && (sdLogBuff.canID <= configPage3.Ke_h_CANIDMax))
+        {
+          Send_CAN0_message(sdLogBuff.canID, sdLogBuff.length, sdLogBuff.canmsgData);
+          BIT_SET(Out_TS.Vars.Va_b_SDLoggingStatus, BIT_SDLOG_SENTDATA); //set sent data flag
+        }
+        sdFileLogPrev = sdLogBuff.logMillis; // record timestamp for next time.
+        CANLogMillis = millis(); // record system time stamp for next time.
+        Ve_e_SDFileSendStat = SD_FILE_SEND_SENT;
+      }
+    break;
+    
+    case SD_FILE_SEND_SENT:
+      if (SDCRD_F_DataFile.available() >= sizeof(sdLogBuff))
+      {
+        FileStat = SDCRD_F_DataFile.read(&sdLogBuff, sizeof(sdLogBuff)); // read a row of data
+        Ve_e_SDFileSendStat = SD_FILE_SEND_PENDING;
+        
+        if(FileStat == -1)
+        {
+          Ve_e_SDFileSendStat = SD_FILE_SEND_END;
+        }
+      }
+      else
+      {
+        Ve_e_SDFileSendStat = SD_FILE_SEND_END;
+      }
+    break;
+    
+    case SD_FILE_SEND_END:
+      
+      BIT_CLEAR(Out_TS.Vars.Va_b_SDLoggingStatus, BIT_SDLOG_SENTDATA); //clear sent data flag
+      
+      if (Ve_e_SDFileStatus == SDFILE_OPEN)
+      {
+        SDCRD_F_DataFile.close();
+        BIT_CLEAR(Out_TS.Vars.Va_b_SDLoggingStatus, BIT_SDLOG_FILEOPEN); //set logging status
+      }
+      
+      if (bitRead(Out_TS.Vars.Va_b_SDLoggingStatus, BIT_SDLOG_REPLAYRESET))
+      {
+        BIT_CLEAR(Out_TS.Vars.Va_b_SDLoggingStatus, BIT_SDLOG_REPLAYRESET);
+        Ve_e_SDFileSendStat = SD_FILE_SEND_INIT;
+      }
+    break;
+      
   }
   
-  if(Ve_e_SDFileStatus == SDFILE_OPEN)
-  {
-    // Read file and send via CAN, save variable with next ms to send can data.
-  }
 }
 
 
@@ -302,7 +417,7 @@ void canBroadcast_5ms(void)
       (bitRead(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0FAILED) == false))
   {
     byte canmsg[] = { 0, 0, 0, 0, 0, 0, 0, 5 };
-    Send_CAN0_message(0, 0x500, canmsg);
+    Send_CAN0_message(0x500, 8, canmsg);
   }
 }
 
@@ -314,7 +429,7 @@ void canBroadcast_20ms(void)
       (bitRead(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0FAILED) == false))
   {
   byte canmsg[] = { 0, 0, 0, 0, 0, 0, 0, 20 };
-  Send_CAN0_message(0, 0x501, canmsg);
+  Send_CAN0_message(0x501, 8, canmsg);
   }
 }
 
@@ -325,7 +440,7 @@ void canBroadcast_50ms(void)
       (bitRead(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0FAILED) == false))
   {
   byte canmsg[] = { 0, 0, 0, 0, 0, 0, 0, 50 };
-  Send_CAN0_message(0, 0x502, canmsg);
+  Send_CAN0_message(0x502, 8, canmsg);
   }
 }
 
@@ -335,8 +450,10 @@ void canBroadcast_100ms(void)
       (bitRead(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0ACTIVATED) == true) &&
       (bitRead(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0FAILED) == false))
   {
-  byte canmsg[] = { 0, 0, 0, 0, 0, 0, 0, 100 };
-  Send_CAN0_message(0, 0x503, canmsg);
+  byte canmsg[] = { 0x08, 0x04, 0xFF, 0xFF, 0xFF, 0xFF, 0x35, 100 };
+  canmsg[0] = highByte(Out_TS.Vars.dev4);
+  canmsg[1] = lowByte(Out_TS.Vars.dev4);
+  Send_CAN0_message(0x402, 8, canmsg);  // engine rpm
   }
 }
 
@@ -346,8 +463,8 @@ void canBroadcast_500ms(void)
       (bitRead(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0ACTIVATED) == true) &&
       (bitRead(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0FAILED) == false))
   {
-  byte canmsg[] = { 0, 0, 0, 0, 0, 0, 5, 000 };
-  Send_CAN0_message(0, 0x504, canmsg);
+  byte canmsg[] = { 0, 0, 0, 0, 0, 0, 5, 5 };
+  Send_CAN0_message(0x504, 8, canmsg);
   }
 }
 
@@ -357,8 +474,9 @@ void canBroadcast_1000ms(void)
       (bitRead(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0ACTIVATED) == true) &&
       (bitRead(Out_TS.Vars.Va_b_canstatus, BIT_CANSTATUS_CAN0FAILED) == false))
   {
-  byte canmsg[] = { 0, 0, 0, 0, 0, 0, 7, 000 };
-  Send_CAN0_message(0, 0x505, canmsg);
+  byte canmsg[] = { 0, 0, 0, 0, 0, 0, 7, 10 };
+
+  Send_CAN0_message(0x505, 8, canmsg);
   }
 }
 

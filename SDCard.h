@@ -7,6 +7,7 @@
 #ifndef SDCARD_H
 #define SDCARD_H
 
+#include <SPI.h>
 #include <SD.h>
 
 #define SDFILE_CLOSED 0

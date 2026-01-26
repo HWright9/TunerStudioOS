@@ -49,6 +49,11 @@ void INIT_setPinMapping(void)
     
   if (configPage1.analogSelectorEn == APIN_ENABLED) { Pin_analogSelector = configPage1.analogSelectorPin; }
   
+  Pin_analogButtons = 0; // A0 is analogue buttons
+  
+  Pin_LEDRED = pinTranslate(4); setPortMode(Pin_LEDRED,OUTPUT);
+  Pin_LEDGREEN = pinTranslate(3); setPortMode(Pin_LEDGREEN,OUTPUT);
+  
 }
 
 uint16_t readAnalog(uint8_t AinCH)
